@@ -7,8 +7,8 @@ How to play werewolf if you don't remember: https://www.youtube.com/watch?v=dd2s
 **Requirements to run:**
 - Python 3.12 
 - Pip
-- Docker Desktop Application # make sure you open this before you start
-- Docker
+- Docker Desktop Application > 4.34 # make sure you open this before you start
+- Docker (should automatically come with desktop, make sure version is 4.34 or above)
 - Poetry (recommend installing via home brew: `brew install poetry`)
 - venv (recommended)
 
@@ -87,12 +87,13 @@ Open the link at the bottom of the runner script: https://hydrogen.sentient.xyz/
 # Trouble Shooting
 1. Make sure that you rebuild your agent before running it by using poetry build
 2. Make sure Docker is up and running. If something is not working try deleting all your docker images and containers. Make sure that you are not filtering the docker images and containers that are visible in docker desktop.
-3. Make sure that you run poetry build before you try a runner file. Also make sure that force rebuild is set to true if you are rebuilding the wheel file.
-4. If you are using a VPN try disabling it. 
-5. Try restarting terminal, docker and your machine if all else fails.
-6. We recommend using homebrew to install poetry: `brew install poetry`
-7. Do not use safari for opening messenger client, chrome recommended. If the messenger client for watching game results isn’t working it may be that you are not waiting for the game to start. If it still won’t load when the game starts, then search your terminal logs for: -  server url - and check to see if your docker settings are causing it to be hosted at a server different from http:localhost:8008 (for example http://1730591050_fj8_sentient_werewolf_controller:8008) in this case you need to enter that url into the url field for the messenger client log in
-8. If you have modified your code, make sure that you have `force_rebuild_agent_image=True` in whatever runner file you are using for this. 
+3. Update Docker! Make sure Docker is version 4.34 or above. Check application and docker in terminal.
+4. Make sure that you run poetry build before you try a runner file. Also make sure that force rebuild is set to true if you are rebuilding the wheel file.
+5. If you are using a VPN try disabling it. 
+6. Try restarting terminal, docker and your machine if all else fails.
+7. We recommend using homebrew to install poetry: `brew install poetry`
+8. Do not use safari for opening messenger client, chrome recommended. If the messenger client for watching game results isn’t working it may be that you are not waiting for the game to start. If it still won’t load when the game starts, then search your terminal logs for: -  server url - and check to see if your docker settings are causing it to be hosted at a server different from http:localhost:8008 (for example http://1730591050_fj8_sentient_werewolf_controller:8008) in this case you need to enter that url into the url field for the messenger client log in
+9. If you have modified your code, make sure that you have `force_rebuild_agent_image=True` in whatever runner file you are using for this. 
 
 # Welcome
 
@@ -175,8 +176,8 @@ Beyond this, running the game locally requires the following:
 
 - Python 3.12
 - Pip
-- Docker Desktop Application
-- Docker
+- Docker Desktop Application > 4.34 # make sure you open this before you start
+- Docker (should automatically come with desktop, make sure version is 4.34 or above)
 - Poetry
 - venv (recommended)
 
