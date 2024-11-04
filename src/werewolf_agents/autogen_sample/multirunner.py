@@ -43,7 +43,7 @@ def run_multiple_games(num_games: int, port: int = 8008, results_dir: str = "gam
                 agent_config,
                 players_sentient_llm_api_keys,
                 path_to_final_transcript_dump="transcripts",
-                force_rebuild_agent_image=False # necessary if you have rebuilt, must turn false if you want to run simultaneously in several terminals
+                force_rebuild_agent_image=True # necessary if you have rebuilt, must turn false if you want to run simultaneously in several terminals
             )
             
             # Save game results in the game_results directory
