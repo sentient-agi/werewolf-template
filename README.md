@@ -398,7 +398,7 @@ username: moderator
 password: moderator
 
 *Troubleshooting Hydrogen:*
-If the messenger client for watching game results isn’t working it may be that you are not waiting for the game to start. If it still won’t load when the game starts, then you may need to enable host networking in your docker desktop application settings: settings ->resource -> network and enable host networking
+If the messenger client for watching game results isn’t working it may be that you are not waiting for the game to start. If it still won’t load when the game starts, then you may need to enable host networking in your docker desktop application settings: settings ->resource -> network and enable host networking. Note that if you change the port, to view the game in the hydrogen messenger client UI, you need to change the port number after localhost in the homserver url. 
 
 ## Storing and Viewing Werewolf Game Results
 
@@ -421,7 +421,7 @@ And you must specify different ports for those games to broadcast to. You can ru
 ```
 python multirunner.py --games 5 --port 14002
 ```
-We recommend sticking to ports above 14000.
+We recommend sticking to ports above 14000. Note that if you change the port, to view the game in the hydrogen messenger client UI, you need to change the port number after localhost in the homserver url. 
 
 
 
