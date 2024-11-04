@@ -88,6 +88,7 @@ async def run_scenario(agent_factory, scenario):
     agent = agent_factory()
     messages = {}
     outputs = []
+    message_history = []  # To store all messages
 
     # Capture the print statements
     import sys
@@ -105,6 +106,7 @@ async def run_scenario(agent_factory, scenario):
                 message = build_activity_message(agent, msg_data)
                 # Store the message by its message_id
                 messages[message.header.message_id] = message
+                message_history.append((message.header.sender, message.content.text))
                 await agent.async_notify(message)
             elif action == 'respond':
                 # For 'respond', we need to get the message to respond to
@@ -126,24 +128,27 @@ async def run_scenario(agent_factory, scenario):
                 response = await agent.async_respond(message)
                 print(f"Agent response: {response.response}")
                 outputs.append(f"Agent response: {response.response}")
+                # Add agent's response to message history
+                message_history.append((agent.name, response.response))
     except Exception as e:
         print(f"Error during scenario execution: {e}")
 
     # Restore original stdout
     sys.stdout = original_stdout
 
-    return capture.getvalue()
+    return capture.getvalue(), message_history
 
 async def main():
     """Main function to run all scenarios and save results to HTML."""
     results = []
     for scenario in SCENARIOS:
         logger.info(f"Running scenario: {scenario['name']}")
-        output = await run_scenario(agent_factory, scenario)
+        output, message_history = await run_scenario(agent_factory, scenario)
         results.append({
             'scenario': scenario['name'],
             'description': scenario['description'],
             'output': output,
+            'message_history': message_history,
         })
 
     # Generate HTML report
@@ -172,6 +177,16 @@ def generate_html_report(results):
         <div class="scenario">
             <h2>{result['scenario']}</h2>
             <p>{result['description']}</p>
+            <h3>Message History:</h3>
+            <pre>
+        """
+        # Exclude the first message (long introduction)
+        message_history = result['message_history'][1:] if len(result['message_history']) > 1 else []
+        for sender, text in message_history:
+            html_content += f"{sender}: {text}\n"
+
+        html_content += f"""</pre>
+            <h3>Agent Output:</h3>
             <pre>{result['output']}</pre>
         </div>
         """

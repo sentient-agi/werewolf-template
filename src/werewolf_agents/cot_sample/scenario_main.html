@@ -1,44 +1,152 @@
+# scenario_main.py
 
-    <html>
-    <head>
-        <title>Scenario Test Results</title>
-        <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            h1 { color: #333; }
-            h2 { color: #555; }
-            p { color: #777; }
-            pre { background-color: #f4f4f4; padding: 10px; border-radius: 5px; }
-            .scenario { margin-bottom: 40px; }
-        </style>
-    </head>
-    <body>
-    <h1>Scenario Test Results - 2024-11-04 15:30:44</h1>
-        <div class="scenario">
-            <h2>scenario_villager_discussion</h2>
-            <p>Simulates a villager role discussing during the day.</p>
-            <pre>Agent response: text="[From - Fred| To - Everyone| Group Message in play-arena]: I'm voting to eliminate Bob, as I believe the cumulative suspicion and lack of clear alibi from him, despite my initial reservations and attempts to gather more information, make him the most likely candidate to be a werewolf at this point in the game."
-Agent response: text='"I\'m voting to eliminate Bob, as his suspicious behavior, lack of clear alibi, and evasive responses, which were also pointed out by Alice, make him the most likely candidate to be a werewolf at this point in the game."'
-</pre>
-        </div>
-        
-        <div class="scenario">
-            <h2>scenario_seer_night_action</h2>
-            <p>Simulates the seer's night action.</p>
-            <pre>Agent response: text='[To - moderator| From - Fred (me)| Direct Message]: I choose to investigate Alex.'
-</pre>
-        </div>
-        
-        <div class="scenario">
-            <h2>scenario_doctor_night_action</h2>
-            <p>Simulates the doctor's night action.</p>
-            <pre>Agent response: text='I choose to protect Emily.'
-</pre>
-        </div>
-        
-        <div class="scenario">
-            <h2>scenario_wolf_group_action</h2>
-            <p>Simulates the wolf's group discussion.</p>
-            <pre>Agent response: text="[From - Fred (me)| To - WolfAlice| Group Message in wolf's-den]: Considering the lack of information, I think we should stick with targeting John for tonight, but let's keep a close eye on the discussion tomorrow and be prepared to adjust our strategy as needed."
-</pre>
-        </div>
-        </body></html>
+from initial_messages import get_initial_messages
+
+SCENARIOS = [
+    {
+        'name': 'scenario_villager_discussion',
+        'description': 'Simulates a villager role discussing during the day.',
+        'steps': get_initial_messages() + [
+            # Role assignment
+            {
+                'action': 'notify',
+                'message': {
+                    'message_id': '1',
+                    'sender': 'MODERATOR',
+                    'channel': 'direct',
+                    'channel_type': 'DIRECT',
+                    'content_type': 'TEXT_PLAIN',
+                    'text': 'You are a villager.',
+                },
+            },
+            # Night Start
+            {
+                'action': 'notify',
+                'message': {
+                    'message_id': '2',
+                    'sender': 'MODERATOR',
+                    'channel': 'GAME_CHANNEL',
+                    'channel_type': 'GROUP',
+                    'content_type': 'TEXT_PLAIN',
+                    'text': 'Night Start:\n\nHello players, night has started. Please go to sleep.',
+                },
+            },
+            # Day Start
+            {
+                'action': 'notify',
+                'message': {
+                    'message_id': '3',
+                    'sender': 'MODERATOR',
+                    'channel': 'GAME_CHANNEL',
+                    'channel_type': 'GROUP',
+                    'content_type': 'TEXT_PLAIN',
+                    'text': (
+                        'Day start:\n\n'
+                        'Hello players, Good Morning. Please wake up.\n\n'
+                        "Villager dead: Alas! A villager player has been eliminated by the wolves. His name is 'Haruto'.\n\n"
+                        "Let me ask one by one about who are the wolves among ourselves."
+                    ),
+                },
+            },
+            # Discussion Prompt
+            {
+                'action': 'notify',
+                'message': {
+                    'message_id': '4',
+                    'sender': 'MODERATOR',
+                    'channel': 'GAME_CHANNEL',
+                    'channel_type': 'GROUP',
+                    'content_type': 'TEXT_PLAIN',
+                    'text': "Hey Helga, who do you think is or is not a 'wolf' in the group and what is your reason?",
+                },
+            },
+            # Player Discussion
+            {
+                'action': 'notify',
+                'message': {
+                    'message_id': '5',
+                    'sender': 'Alice',
+                    'channel': 'GAME_CHANNEL',
+                    'channel_type': 'GROUP',
+                    'content_type': 'TEXT_PLAIN',
+                    'text': 'I think Bob is acting suspicious.',
+                },
+            },
+            # Agent's Response to Discussion
+            {
+                'action': 'respond',
+                'message_id': '5',
+            },
+            # Voting Prompt
+            {
+                'action': 'notify',
+                'message': {
+                    'message_id': '6',
+                    'sender': 'MODERATOR',
+                    'channel': 'GAME_CHANNEL',
+                    'channel_type': 'GROUP',
+                    'content_type': 'TEXT_PLAIN',
+                    'text': "It's time to vote. Who do you think is the werewolf?",
+                },
+            },
+            # Agent's Vote
+            {
+                'action': 'respond',
+                'message_id': '6',
+            },
+        ],
+    },
+    {
+        'name': 'scenario_seer_night_action',
+        'description': "Simulates the seer's night action.",
+        'steps': get_initial_messages() + [
+            # Role assignment
+            {
+                'action': 'notify',
+                'message': {
+                    'message_id': '7',
+                    'sender': 'MODERATOR',
+                    'channel': 'direct',
+                    'channel_type': 'DIRECT',
+                    'content_type': 'TEXT_PLAIN',
+                    'text': 'You are the seer.',
+                },
+            },
+            # Night Start
+            {
+                'action': 'notify',
+                'message': {
+                    'message_id': '8',
+                    'sender': 'MODERATOR',
+                    'channel': 'GAME_CHANNEL',
+                    'channel_type': 'GROUP',
+                    'content_type': 'TEXT_PLAIN',
+                    'text': 'Night Start:\n\nHello players, night has started. Please go to sleep.',
+                },
+            },
+            # Seer's Turn
+            {
+                'action': 'respond',
+                'message': {
+                    'message_id': '9',
+                    'sender': 'MODERATOR',
+                    'channel': 'direct',
+                    'channel_type': 'DIRECT',
+                    'content_type': 'TEXT_PLAIN',
+                    'text': 'Who would you like to investigate tonight?',
+                },
+            },
+        ],
+    },
+    {
+        'name': 'scenario_doctor_night_action',
+        'description': "Simulates the doctor's night action.",
+        'steps': get_initial_messages() + [
+            # Role assignment
+            {
+                'action': 'notify',
+                'message': {
+                    'message_id': '10',
+                    'sender': 'MODERATOR',
+                    'channel': 'direct',
+              
