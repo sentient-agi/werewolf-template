@@ -1,2 +1,7 @@
 /venv/
 /.idea/
+.env
+*/transcripts/*
+*/dist/*
+*.whl
+*.tar.gz
