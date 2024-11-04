@@ -3,16 +3,17 @@
 import asyncio
 import logging
 import os
-from agent.cot_agent import CoTAgent
 from dotenv import load_dotenv
 from scenario_main import SCENARIOS
 from datetime import datetime
 
 # Import necessary classes
+from agent.cot_agent import CoTAgent
 from sentient_campaign.agents.v1.message import (
+    ActivityMessage,
     ActivityMessageHeader,
-    MessageChannelType,
     MimeType,
+    MessageChannelType,
     TextContent,
 )
 
@@ -45,12 +46,50 @@ def agent_factory():
     agent.__initialize__("Fred", "A werewolf player")
     return agent
 
-async def run_scenario(agent_factory, scenario_function):
+def build_activity_message(agent, msg_data):
+    """Builds an ActivityMessage from message data."""
+    # Get message fields
+    message_id = msg_data.get('message_id')
+    sender = msg_data.get('sender')
+    channel = msg_data.get('channel')
+    channel_type_str = msg_data.get('channel_type')
+    content_type_str = msg_data.get('content_type')
+    text = msg_data.get('text')
+
+    # Handle special channel names
+    if sender == 'MODERATOR':
+        sender = agent.MODERATOR_NAME
+    if channel == 'GAME_CHANNEL':
+        channel = agent.GAME_CHANNEL
+    if channel == 'WOLFS_CHANNEL':
+        channel = agent.WOLFS_CHANNEL
+
+    # Convert channel_type and content_type to enums
+    channel_type = getattr(MessageChannelType, channel_type_str)
+    content_type = getattr(MimeType, content_type_str)
+
+    header = ActivityMessageHeader(
+        message_id=message_id,
+        sender=sender,
+        channel=channel,
+        channel_type=channel_type,
+    )
+    content = TextContent(text=text)
+
+    message = ActivityMessage(
+        content_type=content_type,
+        header=header,
+        content=content,
+    )
+    return message
+
+async def run_scenario(agent_factory, scenario):
     """Runs a given scenario using a new agent instance."""
     agent = agent_factory()
-    output = []
+    messages = {}
+    outputs = []
 
-    # Capture the print statements in a list
+    # Capture the print statements
     import sys
     from io import StringIO
 
@@ -58,7 +97,35 @@ async def run_scenario(agent_factory, scenario_function):
     sys.stdout = capture = StringIO()
 
     try:
-        await scenario_function(agent)
+        for step in scenario['steps']:
+            action = step['action']
+            if action == 'notify':
+                msg_data = step['message']
+                # Build the ActivityMessage
+                message = build_activity_message(agent, msg_data)
+                # Store the message by its message_id
+                messages[message.header.message_id] = message
+                await agent.async_notify(message)
+            elif action == 'respond':
+                # For 'respond', we need to get the message to respond to
+                if 'message_id' in step:
+                    message_id = step['message_id']
+                    message = messages.get(message_id)
+                    if message is None:
+                        print(f"Message ID {message_id} not found.")
+                        continue
+                elif 'message' in step:
+                    # Build the message from data
+                    msg_data = step['message']
+                    message = build_activity_message(agent, msg_data)
+                    # Store the message by its message_id
+                    messages[message.header.message_id] = message
+                else:
+                    print("No message or message_id provided for respond action.")
+                    continue
+                response = await agent.async_respond(message)
+                print(f"Agent response: {response.response}")
+                outputs.append(f"Agent response: {response.response}")
     except Exception as e:
         print(f"Error during scenario execution: {e}")
 
@@ -71,11 +138,11 @@ async def main():
     """Main function to run all scenarios and save results to HTML."""
     results = []
     for scenario in SCENARIOS:
-        logger.info(f"Running scenario: {scenario.__name__}")
+        logger.info(f"Running scenario: {scenario['name']}")
         output = await run_scenario(agent_factory, scenario)
         results.append({
-            'scenario': scenario.__name__,
-            'description': scenario.__doc__,
+            'scenario': scenario['name'],
+            'description': scenario['description'],
             'output': output,
         })
 
