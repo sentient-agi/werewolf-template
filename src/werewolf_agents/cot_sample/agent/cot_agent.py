@@ -29,15 +29,13 @@ MODERATOR_NAME = "moderator"
 MODEL_NAME = "Llama31-70B-Instruct"
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 logger = logging.getLogger("demo_agent")
-level = logging.DEBUG
-logger.setLevel(level)
+logger.setLevel(logging.INFO)
 logger.propagate = True
 handler = logging.StreamHandler()
-handler.setLevel(level)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
@@ -119,7 +117,7 @@ class CoTAgent(IReactiveAgent):
             # if this is the first message in the game channel, the moderator is sending the rules, store them
             if message.header.channel == self.GAME_CHANNEL and message.header.sender == self.MODERATOR_NAME and not self.game_intro:
                 self.game_intro = message.content.text
-        logger.info(f"message stored in messages {message}")
+        logger.info(f"Message stored: {message.header.sender} in '{message.header.channel}': {message.content.text}")
 
     def get_interwoven_history(self, include_wolf_channel=False):
         return "\n".join([
@@ -161,7 +159,7 @@ class CoTAgent(IReactiveAgent):
         return role
 
     async def async_respond(self, message: ActivityMessage):
-        logger.info(f"ASYNC RESPOND called with message: {message}")
+        logger.info(f"ASYNC RESPOND called with message from '{message.header.sender}' in channel '{message.header.channel}': '{message.content.text}'")
 
         if message.header.channel_type == MessageChannelType.DIRECT and message.header.sender == self.MODERATOR_NAME:
             self.direct_messages[message.header.sender].append(message.content.text)

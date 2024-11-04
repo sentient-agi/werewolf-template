@@ -5,3 +5,7 @@
 */dist/*
 *.whl
 *.tar.gz
+/src/werewolf_agents/simple_sample/dist/
+/src/werewolf_agents/cot_sample/dist/
+/src/werewolf_agents/cot_sample/.cache/
+*.pyc
