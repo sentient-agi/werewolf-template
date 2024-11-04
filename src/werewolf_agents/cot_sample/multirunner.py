@@ -33,7 +33,7 @@ def run_multiple_games(num_games: int, port: int = 8008, results_dir: str = "gam
                 player_name="Chagent",  # select a name for your agent
 
                 #TODO: IMPORTANT!! After building your agent for the first time, you must update this path:
-                agent_wheel_path="/Users/btsfinch/final-werewolf-template/werewolf-template/src/werewolf_agents/cot_sample/dist/chagent-0.1.0-py3-none-any.whl",  
+                agent_wheel_path="/Users/aydar/Documents/GitHub/werewolf-template/src/werewolf_agents/cot_sample/dist/chagent-0.1.0-py3-none-any.whl",
                 module_path="agent/cot_agent.py",
                 agent_class_name="CoTAgent",
                 agent_config_file_path="config.yaml"
