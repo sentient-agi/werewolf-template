@@ -1,152 +1,99 @@
-# scenario_main.py
 
-from initial_messages import get_initial_messages
+    <html>
+    <head>
+        <title>Scenario Test Results</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1 { color: #333; }
+            h2 { color: #555; }
+            p { color: #777; }
+            pre { background-color: #f4f4f4; padding: 10px; border-radius: 5px; }
+            .scenario { margin-bottom: 40px; }
+        </style>
+    </head>
+    <body>
+    <h1>Scenario Test Results - 2024-11-04 15:47:13</h1>
+        <div class="scenario">
+            <h2>scenario_villager_discussion</h2>
+            <p>Simulates a villager role discussing during the day.</p>
+            <h3>Message History:</h3>
+            <pre>
+        moderator: You are a villager.
+moderator: Night Start:
 
-SCENARIOS = [
-    {
-        'name': 'scenario_villager_discussion',
-        'description': 'Simulates a villager role discussing during the day.',
-        'steps': get_initial_messages() + [
-            # Role assignment
-            {
-                'action': 'notify',
-                'message': {
-                    'message_id': '1',
-                    'sender': 'MODERATOR',
-                    'channel': 'direct',
-                    'channel_type': 'DIRECT',
-                    'content_type': 'TEXT_PLAIN',
-                    'text': 'You are a villager.',
-                },
-            },
-            # Night Start
-            {
-                'action': 'notify',
-                'message': {
-                    'message_id': '2',
-                    'sender': 'MODERATOR',
-                    'channel': 'GAME_CHANNEL',
-                    'channel_type': 'GROUP',
-                    'content_type': 'TEXT_PLAIN',
-                    'text': 'Night Start:\n\nHello players, night has started. Please go to sleep.',
-                },
-            },
-            # Day Start
-            {
-                'action': 'notify',
-                'message': {
-                    'message_id': '3',
-                    'sender': 'MODERATOR',
-                    'channel': 'GAME_CHANNEL',
-                    'channel_type': 'GROUP',
-                    'content_type': 'TEXT_PLAIN',
-                    'text': (
-                        'Day start:\n\n'
-                        'Hello players, Good Morning. Please wake up.\n\n'
-                        "Villager dead: Alas! A villager player has been eliminated by the wolves. His name is 'Haruto'.\n\n"
-                        "Let me ask one by one about who are the wolves among ourselves."
-                    ),
-                },
-            },
-            # Discussion Prompt
-            {
-                'action': 'notify',
-                'message': {
-                    'message_id': '4',
-                    'sender': 'MODERATOR',
-                    'channel': 'GAME_CHANNEL',
-                    'channel_type': 'GROUP',
-                    'content_type': 'TEXT_PLAIN',
-                    'text': "Hey Helga, who do you think is or is not a 'wolf' in the group and what is your reason?",
-                },
-            },
-            # Player Discussion
-            {
-                'action': 'notify',
-                'message': {
-                    'message_id': '5',
-                    'sender': 'Alice',
-                    'channel': 'GAME_CHANNEL',
-                    'channel_type': 'GROUP',
-                    'content_type': 'TEXT_PLAIN',
-                    'text': 'I think Bob is acting suspicious.',
-                },
-            },
-            # Agent's Response to Discussion
-            {
-                'action': 'respond',
-                'message_id': '5',
-            },
-            # Voting Prompt
-            {
-                'action': 'notify',
-                'message': {
-                    'message_id': '6',
-                    'sender': 'MODERATOR',
-                    'channel': 'GAME_CHANNEL',
-                    'channel_type': 'GROUP',
-                    'content_type': 'TEXT_PLAIN',
-                    'text': "It's time to vote. Who do you think is the werewolf?",
-                },
-            },
-            # Agent's Vote
-            {
-                'action': 'respond',
-                'message_id': '6',
-            },
-        ],
-    },
-    {
-        'name': 'scenario_seer_night_action',
-        'description': "Simulates the seer's night action.",
-        'steps': get_initial_messages() + [
-            # Role assignment
-            {
-                'action': 'notify',
-                'message': {
-                    'message_id': '7',
-                    'sender': 'MODERATOR',
-                    'channel': 'direct',
-                    'channel_type': 'DIRECT',
-                    'content_type': 'TEXT_PLAIN',
-                    'text': 'You are the seer.',
-                },
-            },
-            # Night Start
-            {
-                'action': 'notify',
-                'message': {
-                    'message_id': '8',
-                    'sender': 'MODERATOR',
-                    'channel': 'GAME_CHANNEL',
-                    'channel_type': 'GROUP',
-                    'content_type': 'TEXT_PLAIN',
-                    'text': 'Night Start:\n\nHello players, night has started. Please go to sleep.',
-                },
-            },
-            # Seer's Turn
-            {
-                'action': 'respond',
-                'message': {
-                    'message_id': '9',
-                    'sender': 'MODERATOR',
-                    'channel': 'direct',
-                    'channel_type': 'DIRECT',
-                    'content_type': 'TEXT_PLAIN',
-                    'text': 'Who would you like to investigate tonight?',
-                },
-            },
-        ],
-    },
-    {
-        'name': 'scenario_doctor_night_action',
-        'description': "Simulates the doctor's night action.",
-        'steps': get_initial_messages() + [
-            # Role assignment
-            {
-                'action': 'notify',
-                'message': {
-                    'message_id': '10',
-                    'sender': 'MODERATOR',
-                    'channel': 'direct',
-              
+Hello players, night has started. Please go to sleep.
+moderator: Day start:
+
+Hello players, Good Morning. Please wake up.
+
+Villager dead: Alas! A villager player has been eliminated by the wolves. His name is 'Haruto'.
+
+Let me ask one by one about who are the wolves among ourselves.
+moderator: Hey Helga, who do you think is or is not a 'wolf' in the group and what is your reason?
+Alice: I think Bob is acting suspicious.
+Fred: text='"I\'m going to vote to eliminate \'Alice\' because her mention of \'Bob\' seems suspicious and out of context, and I\'d like to see if her behavior is a result of being a werewolf trying to create confusion or just a misunderstanding."'
+moderator: It's time to vote. Who do you think is the werewolf?
+Fred: text='"I\'m voting to eliminate Alice because her mention of \'Bob\' still seems suspicious and out of context, and I believe it\'s the most significant red flag we\'ve seen so far, but I\'d like to hear more thoughts and justifications from others before the final vote count."'
+</pre>
+            <h3>Agent Output:</h3>
+            <pre>Agent response: text='"I\'m going to vote to eliminate \'Alice\' because her mention of \'Bob\' seems suspicious and out of context, and I\'d like to see if her behavior is a result of being a werewolf trying to create confusion or just a misunderstanding."'
+Agent response: text='"I\'m voting to eliminate Alice because her mention of \'Bob\' still seems suspicious and out of context, and I believe it\'s the most significant red flag we\'ve seen so far, but I\'d like to hear more thoughts and justifications from others before the final vote count."'
+</pre>
+        </div>
+        
+        <div class="scenario">
+            <h2>scenario_seer_night_action</h2>
+            <p>Simulates the seer's night action.</p>
+            <h3>Message History:</h3>
+            <pre>
+        moderator: You are the seer.
+moderator: Night Start:
+
+Hello players, night has started. Please go to sleep.
+Fred: text='Ingrid'
+</pre>
+            <h3>Agent Output:</h3>
+            <pre>Agent response: text='Ingrid'
+</pre>
+        </div>
+        
+        <div class="scenario">
+            <h2>scenario_doctor_night_action</h2>
+            <p>Simulates the doctor's night action.</p>
+            <h3>Message History:</h3>
+            <pre>
+        moderator: You are the doctor.
+moderator: Night Start:
+
+Hello players, night has started. Please go to sleep.
+Fred: text='Please protect Ramesh for the first night.'
+</pre>
+            <h3>Agent Output:</h3>
+            <pre>Agent response: text='Please protect Ramesh for the first night.'
+</pre>
+        </div>
+        
+        <div class="scenario">
+            <h2>scenario_wolf_group_action</h2>
+            <p>Simulates the wolf's group discussion.</p>
+            <h3>Message History:</h3>
+            <pre>
+        moderator: You are a wolf.
+moderator: Night Start:
+
+Hello players, night has started. Please go to sleep.
+moderator: Wolf night:
+
+Hello wolves, I have created this new private group between wolves called "wolfs-group".
+
+I will use this group to ask you to vote a player to eliminate every night.
+
+Here are the alive villager players for this night: ['Chagent', 'Michael', 'Helga', 'Ling', 'Haruto', 'Jian']
+WolfAlice: Who should we eliminate tonight?
+Fred: text="To - Everyone| Group Message in wolf's-den: Let's go with Haruto tonight, it seems like a safer option considering Ling hasn't made any comments yet, but Haruto's name hasn't been mentioned at all, which might make their elimination less suspicious."
+</pre>
+            <h3>Agent Output:</h3>
+            <pre>Agent response: text="To - Everyone| Group Message in wolf's-den: Let's go with Haruto tonight, it seems like a safer option considering Ling hasn't made any comments yet, but Haruto's name hasn't been mentioned at all, which might make their elimination less suspicious."
+</pre>
+        </div>
+        </body></html>
