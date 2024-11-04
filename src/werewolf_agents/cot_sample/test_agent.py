@@ -7,7 +7,6 @@ from agent.cot_agent import CoTAgent
 # Import necessary classes
 from sentient_campaign.agents.v1.message import (
     ActivityMessage,
-    ActivityResponse,
     MimeType,
     ActivityMessageHeader,
     MessageChannelType,
@@ -31,41 +30,42 @@ formatter = logging.Formatter(
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-async def main():
-    # Create an instance of the agent
+def agent_factory():
+    """Creates and initializes a new agent instance."""
     agent = CoTAgent()
-
-    # Set up the _sentient_llm_config attribute
     agent._sentient_llm_config = {
         "config_list": [
             {
-                "llm_model_name": os.getenv("SENTIENT_DEFAULT_LLM_MODEL_NAME"),  # specify the model name
-                "api_key": os.getenv("MY_UNIQUE_API_KEY"),    # replace with your OpenAI API key
-                "llm_base_url": os.getenv("SENTIENT_DEFAULT_LLM_BASE_URL"),  # leave empty if using OpenAI's default base URL
+                "llm_model_name": os.getenv("SENTIENT_DEFAULT_LLM_MODEL_NAME"),
+                "api_key": os.getenv("MY_UNIQUE_API_KEY"),
+                "llm_base_url": os.getenv("SENTIENT_DEFAULT_LLM_BASE_URL"),
             }
         ]
     }
-    print(agent._sentient_llm_config)
-
-    # Initialize the agent
     agent.__initialize__("Fred", "A werewolf player")
+    return agent
 
+async def run_scenario(agent_factory, scenario_function):
+    """Runs a given scenario using a new agent instance."""
+    agent = agent_factory()
+    await scenario_function(agent)
+
+async def scenario_villager_discussion(agent):
+    """Simulates a villager role discussing during the day."""
     # Simulate receiving the role from the moderator
     role_message = ActivityMessage(
         content_type=MimeType.TEXT_PLAIN,
         header=ActivityMessageHeader(
             message_id="1",
-            sender=agent.MODERATOR_NAME,  # 'moderator' by default
+            sender=agent.MODERATOR_NAME,
             channel="direct",
             channel_type=MessageChannelType.DIRECT,
         ),
         content=TextContent(text="You are a villager."),
     )
-
-    # Notify the agent of the role message
     await agent.async_notify(role_message)
 
-    # Now, simulate a group message in the GAME_CHANNEL
+    # Simulate a group message in the GAME_CHANNEL
     group_message = ActivityMessage(
         content_type=MimeType.TEXT_PLAIN,
         header=ActivityMessageHeader(
@@ -76,8 +76,6 @@ async def main():
         ),
         content=TextContent(text="I think Bob is acting suspicious."),
     )
-
-    # Notify the agent of the group message
     await agent.async_notify(group_message)
 
     # Have the agent respond to the group message
@@ -95,17 +93,16 @@ async def main():
         ),
         content=TextContent(text="It's time to vote. Who do you think is the werewolf?"),
     )
-
-    # Notify the agent of the vote message
     await agent.async_notify(vote_message)
 
     # Have the agent respond to the vote message
     response = await agent.async_respond(vote_message)
     print(f"Agent vote response: {response.response}")
 
-    # Extend the test to simulate night actions for different roles
-    # Let's test for the 'seer' role
-    role_message_seer = ActivityMessage(
+async def scenario_seer_night_action(agent):
+    """Simulates the seer's night action."""
+    # Simulate receiving the role from the moderator
+    role_message = ActivityMessage(
         content_type=MimeType.TEXT_PLAIN,
         header=ActivityMessageHeader(
             message_id="4",
@@ -115,10 +112,7 @@ async def main():
         ),
         content=TextContent(text="You are the seer."),
     )
-
-    # Reinitialize the agent for a new role
-    agent.__initialize__("Fred", "A werewolf player")  # Reset the agent
-    await agent.async_notify(role_message_seer)
+    await agent.async_notify(role_message)
 
     # Simulate the moderator asking the seer for a night action
     seer_night_message = ActivityMessage(
@@ -131,13 +125,13 @@ async def main():
         ),
         content=TextContent(text="Who would you like to investigate tonight?"),
     )
-
-    # Have the agent respond to the seer night action
     response = await agent.async_respond(seer_night_message)
     print(f"Seer night action response: {response.response}")
 
-    # Similarly, test for the 'doctor' role
-    role_message_doctor = ActivityMessage(
+async def scenario_doctor_night_action(agent):
+    """Simulates the doctor's night action."""
+    # Simulate receiving the role from the moderator
+    role_message = ActivityMessage(
         content_type=MimeType.TEXT_PLAIN,
         header=ActivityMessageHeader(
             message_id="6",
@@ -147,10 +141,7 @@ async def main():
         ),
         content=TextContent(text="You are the doctor."),
     )
-
-    # Reinitialize the agent for a new role
-    agent.__initialize__("Fred", "A werewolf player")  # Reset the agent
-    await agent.async_notify(role_message_doctor)
+    await agent.async_notify(role_message)
 
     # Simulate the moderator asking the doctor for a night action
     doctor_night_message = ActivityMessage(
@@ -163,13 +154,13 @@ async def main():
         ),
         content=TextContent(text="Who would you like to protect tonight?"),
     )
-
-    # Have the agent respond to the doctor night action
     response = await agent.async_respond(doctor_night_message)
     print(f"Doctor night action response: {response.response}")
 
-    # Finally, test for the 'wolf' role
-    role_message_wolf = ActivityMessage(
+async def scenario_wolf_group_action(agent):
+    """Simulates the wolf's group discussion."""
+    # Simulate receiving the role from the moderator
+    role_message = ActivityMessage(
         content_type=MimeType.TEXT_PLAIN,
         header=ActivityMessageHeader(
             message_id="8",
@@ -179,10 +170,7 @@ async def main():
         ),
         content=TextContent(text="You are a wolf."),
     )
-
-    # Reinitialize the agent for a new role
-    agent.__initialize__("Fred", "A werewolf player")  # Reset the agent
-    await agent.async_notify(role_message_wolf)
+    await agent.async_notify(role_message)
 
     # Simulate a group message in the wolf's den
     wolf_group_message = ActivityMessage(
@@ -195,13 +183,18 @@ async def main():
         ),
         content=TextContent(text="Who should we eliminate tonight?"),
     )
-
-    # Notify the agent of the wolf group message
     await agent.async_notify(wolf_group_message)
 
     # Have the agent respond in the wolf's den
     response = await agent.async_respond(wolf_group_message)
     print(f"Wolf group action response: {response.response}")
+
+async def main():
+    """Main function to run all scenarios."""
+    await run_scenario(agent_factory, scenario_villager_discussion)
+    await run_scenario(agent_factory, scenario_seer_night_action)
+    await run_scenario(agent_factory, scenario_doctor_night_action)
+    await run_scenario(agent_factory, scenario_wolf_group_action)
 
 if __name__ == "__main__":
     asyncio.run(main())
