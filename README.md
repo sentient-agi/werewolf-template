@@ -78,7 +78,7 @@ python runner.py
 Open the link at the bottom of the runner script: https://hydrogen.sentient.xyz/#/login 
 - Use chrome not safari!
 - If you try to log in before the game starts it will give you an error
-- Wait a little and try loggin in again, if more problems see below. 
+- Wait a little and try loggin in again, if more problems may need to enable host networking in docker desktop app (setting ->resource -> network and enable host networking). 
 
 **Pro tip** the docs section of this README below is super long and detailed, if using cursor or copilot just @ this file when trouble shooting!
 
@@ -92,7 +92,7 @@ Open the link at the bottom of the runner script: https://hydrogen.sentient.xyz/
 5. If you are using a VPN try disabling it. 
 6. Try restarting terminal, docker and your machine if all else fails.
 7. We recommend using homebrew to install poetry: `brew install poetry`
-8.  Do not use safari for opening messenger client, chrome recommended. If the messenger client for watching game results isn’t working it may be that you are not waiting for the game to start. If it is still not working, make sure that you have host networking enabled in docker desktop: go to setting ->resource -> network and enable host networking . 
+8.  Do not use safari for opening messenger client, chrome recommended. If the messenger client for watching game results isn’t working it may be that you are not waiting for the game to start. If it is still not working, make sure that you have host networking enabled in docker desktop: go to setting ->resource -> network and enable host networking (you may need to log in for this). 
 9. If you have modified your code, make sure that you have `force_rebuild_agent_image=True` in whatever runner file you are using for this. 
 
 # Welcome
@@ -398,7 +398,7 @@ username: moderator
 password: moderator
 
 *Troubleshooting Hydrogen:*
-If the messenger client for watching game results isn’t working it may be that you are not waiting for the game to start. If it still won’t load when the game starts, then search your terminal logs for: -  server url - and check to see if your docker settings are causing it to be hosted at a server different from http:localhost:8008 (for examplehttp://1730591050_fj8_sentient_werewolf_controller:8008) in this case you need to enter that url into the url field for the messenger client log in
+If the messenger client for watching game results isn’t working it may be that you are not waiting for the game to start. If it still won’t load when the game starts, then you may need to enable host networking in your docker desktop application settings: settings ->resource -> network and enable host networking
 
 ## Storing and Viewing Werewolf Game Results
 
