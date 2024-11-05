@@ -1,5 +1,5 @@
 ########################################################################
-# This is runner file for running different agents against one another
+# This is a runner file for running different agents against one another
 #########################################################################
 
 ########################################################################
