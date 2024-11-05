@@ -1,11 +1,10 @@
 ########################################################################
-# This is runner file for running different agents against one another
+# This is a runner file for running different agents against one another
 #########################################################################
 
 ########################################################################
-# IMPORTANT: This file is currently under maintenance, right now you 
-# need to update all AGENT_CONFIGS below to use this, which is quite
-# tricky. Check back to github for a streamlined version coming soon. 
+# This file is runnable, but at the moment, it is difficult to see how
+# different agents are being mapped to names. Fix for this coming soon. 
 #########################################################################
 
 from sentient_campaign.activity_runner.runner import WerewolfCampaignActivityRunner, PlayerAgentConfig, SentientWerewolfRoles
