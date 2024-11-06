@@ -14,7 +14,7 @@ Path("transcripts").mkdir(parents=True, exist_ok=True)
 runner = WerewolfCampaignActivityRunner()
 agent_config = PlayerAgentConfig(
     player_name="James", # select a name for your agent
-    agent_wheel_path="/Users/btsfinch/hope_temp_ww/werewolf-template/src/werewolf_agents/autogen_sample/dist/autogenwolf-0.0.1-py3-none-any.whl", # update wheel file path
+    agent_wheel_path="dist/autogenwolf-0.0.1-py3-none-any.whl", # update wheel file path
     module_path="agent/single_agent.py",
     agent_class_name="WerewolfAgent",
     agent_config_file_path="config.yaml" 
