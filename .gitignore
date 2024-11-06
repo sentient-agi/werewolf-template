@@ -11,3 +11,5 @@
 *.pyc
 /transcript/error_logs/
 /transcript/
+/src/werewolf_agents/autogen_sample/game_results/
+/src/werewolf_agents/autogen_sample/transcripts/
