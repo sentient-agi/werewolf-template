@@ -26,9 +26,9 @@ load_dotenv()
 # Default role distribution
 DEFAULT_ROLE_DISTRIBUTION = {
     "wolf": {"agent_type": "cot", "count": 2},
-    "villager": {"agent_type": "cot_updated", "count": 4},
-    "seer": {"agent_type": "cot_updated", "count": 1},
-    "doctor": {"agent_type": "cot_updated", "count": 1}
+    "villager": {"agent_type": "custom", "count": 4},
+    "seer": {"agent_type": "custom", "count": 1},
+    "doctor": {"agent_type": "custom", "count": 1}
 }
 # Your Sentient API key
 SENTIENT_API_KEY = os.getenv("MY_UNIQUE_API_KEY")
@@ -41,11 +41,11 @@ AGENT_CONFIGS = {
         "config_path": "./src/werewolf_agents/cot_sample/config.yaml",
         "agent_class": "CoTAgent"
     },
-    "cot_updated": {
-        "wheel_path": "./src/werewolf_agents/cot_updated/dist/chagent-0.1.0-py3-none-any.whl",
-        "module_path": "agent/cot_agent.py",
-        "config_path": "./src/werewolf_agents/cot_updated/config.yaml",
-        "agent_class": "CoTAgent"
+    "custom": {
+        "wheel_path": "./src/werewolf_agents/autogen_sample/dist/autogenwolf-0.0.1-py3-none-any.whl",
+        "module_path": "agent/single_agent.py",
+        "config_path": "./src/werewolf_agents/autogen_sample/config.yaml",
+        "agent_class": "WerewolfAgent"
     },
     "simple": {
         "wheel_path": "./src/werewolf_agents/simple_sample/dist/simplewolf-0.0.1-py3-none-any.whl",

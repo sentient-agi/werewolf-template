@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "Chagent"
+version = "0.1.0"
+description = "A description of your project"
+authors = ["thinker <your@email.com>"]
+packages = [{include = "agent"}]  # Add the name of your agent directory here
+
+[tool.poetry.dependencies]
+python = "^3.12"
+sentient-campaign-agents-api = "^0.1.0"
+tenacity = "^9.0.0"
+litellm = "^1.48.2"
+pyautogen = "^0.3.0"
+openai = "1.47.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

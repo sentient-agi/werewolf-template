@@ -47,12 +47,6 @@ AGENT_CONFIGS = {
         "config_path": "./src/werewolf_agents/cot_updated/config.yaml",
         "agent_class": "CoTAgent"
     },
-    "simple": {
-        "wheel_path": "./src/werewolf_agents/simple_sample/dist/simplewolf-0.0.1-py3-none-any.whl",
-        "module_path": "agent/super_simple.py",
-        "config_path": "./src/werewolf_agents/simple_sample/config.yaml",
-        "agent_class": "SimpleReactiveAgent"
-    }
 }
 
 def create_game_config(
@@ -115,7 +109,7 @@ game_result = runner.run_with_your_agents(
     players_sentient_llm_api_keys=[SENTIENT_API_KEY],
     path_to_final_transcript_dump="transcript",
     player_roles=player_roles,
-    force_rebuild_agent_images=True
+    force_rebuild_agent_images=False
 )
 
 activity_id = game_result.get("activity_id")

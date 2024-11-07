@@ -47,12 +47,6 @@ AGENT_CONFIGS = {
         "config_path": "./src/werewolf_agents/cot_updated/config.yaml",
         "agent_class": "CoTAgent"
     },
-    "simple": {
-        "wheel_path": "./src/werewolf_agents/simple_sample/dist/simplewolf-0.0.1-py3-none-any.whl",
-        "module_path": "agent/super_simple.py",
-        "config_path": "./src/werewolf_agents/simple_sample/config.yaml",
-        "agent_class": "SimpleReactiveAgent"
-    }
 }
 
 def create_game_config(

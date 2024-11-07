@@ -39,7 +39,7 @@ def run_multiple_games(num_games: int, port: int = 8008, results_dir: str = "gam
                 player_name="James",  # select a name for your agent
                 
                 #TODO: IMPORTANT!! After building your agent for the first time, you must update this path:
-                agent_wheel_path="/Users/btsfinch/final-werewolf-template/werewolf-template/src/werewolf_agents/simple_sample/dist/james-0.0.1-py3-none-any.whl",  
+                agent_wheel_path="/Users/aydar/Documents/GitHub/werewolf-template/src/werewolf_agents/simple_sample/dist/simplewolf-0.0.1-py3-none-any.whl",
                 module_path="agent/super_simple.py",
                 agent_class_name="SimpleReactiveAgent",
                 agent_config_file_path="config.yaml"
@@ -51,7 +51,7 @@ def run_multiple_games(num_games: int, port: int = 8008, results_dir: str = "gam
                 agent_config,
                 players_sentient_llm_api_keys,
                 path_to_final_transcript_dump="transcripts",
-                force_rebuild_agent_image=True # necessary if you have rebuilt, must turn false if you want to run simultaneously in several terminals
+                force_rebuild_agent_image=False # necessary if you have rebuilt, must turn false if you want to run simultaneously in several terminals
             )
             
             # Save game results in the game_results directory
