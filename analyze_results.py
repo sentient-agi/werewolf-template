@@ -48,11 +48,11 @@ def determine_runner(player_classes):
         return 'Unknown'
 
 def generate_report(transcript_dir):
-    last_four_folders = get_last_n_folders(transcript_dir, n=4)
+    last_6_folders = get_last_n_folders(transcript_dir, n=6)
     report_lines = []
     summary_stats = {'A': {'VILLAGERS': 0, 'WOLVES': 0}, 'B': {'VILLAGERS': 0, 'WOLVES': 0}}
 
-    for folder in last_four_folders:
+    for folder in last_6_folders:
         # Look for the game_result*.log file in the folder
         game_result_files = [f for f in os.listdir(folder) if f.startswith('game_result') and f.endswith('.log')]
         if not game_result_files:
