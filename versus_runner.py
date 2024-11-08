@@ -98,7 +98,7 @@ print(f"Activity completed with ID: {activity_id}")
 # print game result into log file
 with open("game_result_{0}.log".format(activity_id), "w") as f:
     f.write(str(game_result))
-    f.write(f"\nPlayer Classes: {DEFAULT_ROLE_DISTRIBUTION}")
+    f.write(f"\nPlayer Classes: {ROLE_DISTRIBUTION}")
 
 reorg_files("transcript", "game_result_{0}.log".format(activity_id))
 
