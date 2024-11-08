@@ -20,11 +20,15 @@ load_dotenv()
 # You can change this by adding any combination of new agents and players
 
 # Default role distribution
-DEFAULT_ROLE_DISTRIBUTION = {
-    "wolf": {"agent_type": "cot", "count": 2},
-    "villager": {"agent_type": "autogen", "count": 4},
-    "seer": {"agent_type": "simple", "count": 1},
-    "doctor": {"agent_type": "simple", "count": 1}
+ROLE_DISTRIBUTION = {
+    "frodo": {"role": SentientWerewolfRoles.WOLF, "agent": "cot"},
+    "samwise": {"role": SentientWerewolfRoles.WOLF, "agent": "cot"},
+    "meriadoc": {"role": SentientWerewolfRoles.VILLAGER, "agent": "autogen"},
+    "peregrin": {"role": SentientWerewolfRoles.VILLAGER, "agent": "autogen"},
+    "bilbo": {"role": SentientWerewolfRoles.VILLAGER, "agent": "autogen"},
+    "hamfast": {"role": SentientWerewolfRoles.VILLAGER, "agent": "autogen"},
+    "fredegar": {"role": SentientWerewolfRoles.SEER, "agent": "simple"},
+    "lotho": {"role": SentientWerewolfRoles.DOCTOR, "agent": "simple"}
 }
 # Your Sentient API key
 SENTIENT_API_KEY = os.getenv("MY_UNIQUE_API_KEY")
@@ -51,61 +55,32 @@ AGENT_CONFIGS = {
     }
 }
 
-def create_game_config(
-    role_distribution: Dict = None,
-    player_names: List[str] = None
-) -> tuple:
-    """Creates game configuration based on provided distribution or defaults"""
+def create_game_config() -> tuple:
+    """Creates game configuration"""
+    player_roles = {name: config["role"] for name, config in ROLE_DISTRIBUTION.items()}
     
-    role_distribution = role_distribution or DEFAULT_ROLE_DISTRIBUTION
-    default_names = ["frodo", "samwise", "meriadoc", "peregrin", "bilbo", "hamfast", "fredegar", "lotho"]
-    player_names = player_names or default_names
-
-    # Validate total players
-    total_players = sum(role["count"] for role in role_distribution.values())
-    if total_players != 8 or len(player_names) != 8:
-        raise ValueError("Total number of players must be 8")
-
-    # Create role mapping
-    roles = []
-    print(role_distribution)
-    for role_type, config in role_distribution.items():
-        role_enum = getattr(SentientWerewolfRoles, role_type.upper())
-        roles.extend([role_enum] * config["count"])
-
-    # Shuffle roles for all names
-    random.shuffle(roles)
-    player_roles = dict(zip(player_names, roles))
-
-    #print player names, classes, and roles mapping for each player
-    for player_name, role in player_roles.items():
-        print(f"Player: {player_name}, Class: {role_distribution[role.name.lower()]['agent_type']}, Role: {role.value}")
-
-    # Create agent configs
     your_agents = []
-    current_idx = 0
-    for role_type, config in role_distribution.items():
-        agent_type = config["agent_type"]
-        agent_config = AGENT_CONFIGS[agent_type]
-        
-        for _ in range(config["count"]):
-            your_agents.append(PlayerAgentConfig(
-                player_name=player_names[current_idx],
+    for player_name, config in ROLE_DISTRIBUTION.items():
+        agent_config = AGENT_CONFIGS[config["agent"]]
+        your_agents.append(
+            PlayerAgentConfig(
+                player_name=player_name,
                 agent_wheel_path=agent_config["wheel_path"],
                 module_path=agent_config["module_path"],
                 agent_class_name=agent_config["agent_class"],
                 agent_config_file_path=agent_config["config_path"]
-            ))
-            current_idx += 1
+            )
+        )
+
+    # Print player configurations
+    for name, config in ROLE_DISTRIBUTION.items():
+        print(f"Player: {name}, Class: {config['agent']}, Role: {config['role'].name}")
 
     return your_agents, player_roles
 
 
-
 # Create game configuration (using either default or custom)
-your_agents, player_roles = create_game_config(
-    role_distribution=DEFAULT_ROLE_DISTRIBUTION
-)
+your_agents, player_roles = create_game_config()
 
 # Run the game
 runner = WerewolfCampaignActivityRunner(com_server_port=8008)
