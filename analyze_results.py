@@ -2,7 +2,8 @@ import os
 import ast
 from datetime import datetime
 
-def get_last_n_folders(transcript_dir, n=4):
+
+def get_last_n_folders(transcript_dir, n=8):
     # Get a list of all subdirectories in the transcript directory
     folders = [os.path.join(transcript_dir, d) for d in os.listdir(transcript_dir)
                if os.path.isdir(os.path.join(transcript_dir, d))]
@@ -10,6 +11,7 @@ def get_last_n_folders(transcript_dir, n=4):
     folders.sort(key=os.path.getmtime)
     # Return the last n folders
     return folders[-n:]
+
 
 def parse_game_result(game_result_path):
     with open(game_result_path, 'r') as file:
@@ -37,22 +39,24 @@ def parse_game_result(game_result_path):
 
         return game_result, player_classes
 
+
 def determine_runner(player_classes):
-    if (player_classes.get('wolf', {}).get('agent_type') == 'cot' and
-        player_classes.get('villager', {}).get('agent_type') == 'cot_updated'):
+    if (player_classes.get('wolf', {}).get('agent_type') == 'simple' and
+            player_classes.get('villager', {}).get('agent_type') == 'simple_updated_with_memory'):
         return 'A'
-    elif (player_classes.get('wolf', {}).get('agent_type') == 'cot_updated' and
-          player_classes.get('villager', {}).get('agent_type') == 'cot'):
+    elif (player_classes.get('wolf', {}).get('agent_type') == 'simple_updated_with_memory' and
+          player_classes.get('villager', {}).get('agent_type') == 'simple'):
         return 'B'
     else:
         return 'Unknown'
 
+
 def generate_report(transcript_dir):
-    last_6_folders = get_last_n_folders(transcript_dir, n=6)
+    last_eight_folders = get_last_n_folders(transcript_dir, n=8)
     report_lines = []
     summary_stats = {'A': {'VILLAGERS': 0, 'WOLVES': 0}, 'B': {'VILLAGERS': 0, 'WOLVES': 0}}
 
-    for folder in last_6_folders:
+    for folder in last_eight_folders:
         # Look for the game_result*.log file in the folder
         game_result_files = [f for f in os.listdir(folder) if f.startswith('game_result') and f.endswith('.log')]
         if not game_result_files:
@@ -98,11 +102,12 @@ def generate_report(transcript_dir):
 
     # Save the report
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    output_file = os.path.join(transcript_dir, f"versus_summary_{timestamp}.log")
+    output_file = os.path.join('t_results', f"versus_summary_{timestamp}.log")
     with open(output_file, 'w') as out_file:
         out_file.write('\n'.join(report_lines))
 
     print(f"Report generated and saved to {output_file}")
+
 
 if __name__ == "__main__":
     transcript_directory = "transcript"  # Replace with the path to your transcript directory

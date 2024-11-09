@@ -25,10 +25,10 @@ load_dotenv()
 
 # Default role distribution
 DEFAULT_ROLE_DISTRIBUTION = {
-    "wolf": {"agent_type": "cot", "count": 2},
-    "villager": {"agent_type": "cot_updated", "count": 4},
-    "seer": {"agent_type": "cot_updated", "count": 1},
-    "doctor": {"agent_type": "cot_updated", "count": 1}
+    "wolf": {"agent_type": "simple_updated_with_memory", "count": 2},
+    "villager": {"agent_type": "simple", "count": 4},
+    "seer": {"agent_type": "simple", "count": 1},
+    "doctor": {"agent_type": "simple", "count": 1}
 }
 # Your Sentient API key
 SENTIENT_API_KEY = os.getenv("MY_UNIQUE_API_KEY")
@@ -46,6 +46,24 @@ AGENT_CONFIGS = {
         "module_path": "agent/cot_agent.py",
         "config_path": "./src/werewolf_agents/cot_updated/config.yaml",
         "agent_class": "CoTAgent"
+    },
+    "simple": {
+        "wheel_path": "./src/werewolf_agents/simple_sample/dist/simplewolf-0.0.1-py3-none-any.whl",
+        "module_path": "agent/super_simple.py",
+        "config_path": "./src/werewolf_agents/simple_sample/config.yaml",
+        "agent_class": "SimpleReactiveAgent"
+    },
+    "simple_updated": {
+        "wheel_path": "./src/werewolf_agents/simple_updated/dist/simplewolf-0.0.1-py3-none-any.whl",
+        "module_path": "agent/simple_updated.py",
+        "config_path": "./src/werewolf_agents/simple_updated/config.yaml",
+        "agent_class": "SimpleUpdatedAgent"
+    },
+    "simple_updated_with_memory": {
+        "wheel_path": "./src/werewolf_agents/simple_updated_with_memory/dist/simplewolf-0.0.1-py3-none-any.whl",
+        "module_path": "agent/simple_updated_with_memory.py",
+        "config_path": "./src/werewolf_agents/simple_updated_with_memory/config.yaml",
+        "agent_class": "SimpleUpdatedMemoryAgent"
     },
 }
 
