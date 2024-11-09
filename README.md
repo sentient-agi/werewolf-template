@@ -21,9 +21,9 @@ git clone https://github.com/sentient-agi/werewolf-template.git
 ```
 cd werewolf-template/
 ```
-Create a venv:
+Create a venv (if you specify python3.12 will use that version!):
 ```
-python3 -m venv venv
+python3.12 -m venv venv
 ```
 ```
 source venv/bin/activate
