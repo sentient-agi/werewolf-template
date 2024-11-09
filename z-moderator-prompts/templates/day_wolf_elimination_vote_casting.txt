@@ -1,3 +1,3 @@
 Day vote:
 
-Hello {{ delegate_player }}, please cast your final vote on who you think the wolf is. "Please respond in few words".
+Hello {{ delegate_player }}, please cast your final vote for who you think the wolf is.  Keep your response brief so that I can easily identify who you are voting for. Please vote only one villager to eliminate.
