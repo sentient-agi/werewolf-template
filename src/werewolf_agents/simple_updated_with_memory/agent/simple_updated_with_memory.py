@@ -89,8 +89,6 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
 
     async def async_notify(self, message: ActivityMessage):
         message_text = f"[From - {message.header.sender} in {message.header.channel}]: {message.content.text}"
-
-        logger.info(f"ASYNC NOTIFY called with message: {message}")
         if message.header.channel_type == MessageChannelType.DIRECT and message.header.sender == MODERATOR_NAME:
             if not self.role:
                 self.role = self.find_my_role(message)
@@ -115,7 +113,7 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
 
     async def async_respond(self, message: ActivityMessage) -> ActivityResponse:
         message_text = f"[From - {message.header.sender} in {message.header.channel}]: {message.content.text}"
-
+        logger.info(f"async_respond Message added to history: {message_text}")
         # Lets add the message from the memory
         self.message_history.append({
             "role": "system",
@@ -125,8 +123,7 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
             "role": "user",
             "content": message_text
         })
-        logger.info(f"async_respond Message added to history: {message_text}")
-        if message.header.sender == MODERATOR_NAME:
+        if message.header.sender.lower() == MODERATOR_NAME:
             if (('Day consensus:'.lower() in message_text.lower()
                     or 'Day vote:'.lower() in message_text.lower())
                     or 'Wolf vote:'.lower() in message_text.lower()):
@@ -136,10 +133,15 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
                 })
             elif 'Discussion:'.lower() in message_text.lower():
                 logger.info(f"message history size: {len(self.message_history)}")
-                self.message_history.append({
-                    "role": "system",
-                    "content": "Hint: If its the beginning of the game, don't accuse anyone, you will attract unnecessary attention!"
-                })
+                if len(self.message_history) < 13:
+                    content = "Hint: Don't accuse anyone, you will attract unnecessary attention! Just say that you are not sure and want to observe the game as the probability of identifying wolf now is too low as there are more villagers."
+                    self.message_history.append({
+                        "role": "system",
+                        "content": content
+                    })
+                    logger.info(content)
+        else:
+            logger.warning('Non moderator respond message:', message_text)
 
 
         logger.info("Generating response from OpenAI...")
@@ -229,7 +231,7 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
 # agent._sentient_llm_config = {
 #     "config_list": [{
 #         "llm_model_name": "Llama31-70B-Instruct",
-#         "api_key": "sk-QrPEW-u5E1MdkV9TzdcvNg",  # add your api key here
+#         "api_key": "sk-QrPEW-!!",  # add your api key here
 #         "llm_base_url": "https://hp3hebj84f.us-west-2.awsapprunner.com"
 #     }]
 # }
