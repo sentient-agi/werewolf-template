@@ -1,4 +1,5 @@
 import logging
+from importlib.resources import contents
 
 from openai import OpenAI
 from retrying import retry
@@ -127,14 +128,16 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
             if (('Day consensus:'.lower() in message_text.lower()
                     or 'Day vote:'.lower() in message_text.lower())
                     or 'Wolf vote:'.lower() in message_text.lower()):
+                content = "If it's a voting part of the game, you should respond with the name now."
                 self.message_history.append({
                     "role": "system",
-                    "content": "If it's a voting part of the game, you should respond with the name now."
+                    "content": content
                 })
+                logger.info(content)
             elif 'Discussion:'.lower() in message_text.lower():
                 logger.info(f"message history size: {len(self.message_history)}")
-                if len(self.message_history) < 13:
-                    content = "Hint: Don't accuse anyone, you will attract unnecessary attention! Just say that you are not sure and want to observe the game as the probability of identifying wolf now is too low as there are more villagers."
+                if len(self.message_history) < 14:
+                    content = "Hint: Don't accuse anyone, you will attract unnecessary attention! Just say that you are not sure and want to observe the game as the probability of identifying wolf now is too low as there are more villagers. Don't output any names!"
                     self.message_history.append({
                         "role": "system",
                         "content": content
@@ -159,6 +162,7 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
             "content": assistant_message
         })
         logger.info(f"Assistant response added to history: {assistant_message}")
+
 
         return ActivityResponse(response.choices[0].message.content)
 
@@ -224,15 +228,15 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
             raise Exception("Role not found")
 
         return role
-
+#
 #
 # # Since we are not using the runner, we need to initialize the agent manually using an internal function:
 # agent = SimpleUpdatedMemoryAgent()
 # agent._sentient_llm_config = {
 #     "config_list": [{
-#         "llm_model_name": "Llama31-70B-Instruct",
-#         "api_key": "sk-QrPEW-!!",  # add your api key here
-#         "llm_base_url": "https://hp3hebj84f.us-west-2.awsapprunner.com"
+#         "llm_model_name": "accounts/fireworks/models/llama-v3p1-70b-instruct",
+#         "api_key": "",  # add your api key here
+#         "llm_base_url": "https://api.fireworks.ai/inference/v1"
 #     }]
 # }
 # agent.__initialize__("Fred", "A werewolf player")
@@ -259,10 +263,9 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
 #             channel="Play arena",
 #             channel_type=MessageChannelType.GROUP
 #         ),
-#         content=TextContent(text="Hi, who do you think is or is not a wolf in the group and why?")
+#         content=TextContent(text="Discussion: \n Hi, who do you think is or is not a wolf in the group and why?")
 #     )
 #     response = await agent.async_respond(message)
 #     print(f"Agent response: {response.response.text}")
-#
 #
 # asyncio.run(main())

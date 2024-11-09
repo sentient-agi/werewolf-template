@@ -128,7 +128,7 @@ game_result = runner.run_with_your_agents(
     players_sentient_llm_api_keys=[SENTIENT_API_KEY],
     path_to_final_transcript_dump="transcript",
     player_roles=player_roles,
-    force_rebuild_agent_images=True
+    force_rebuild_agent_images=False
 )
 
 activity_id = game_result.get("activity_id")
