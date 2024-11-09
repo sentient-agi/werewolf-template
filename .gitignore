@@ -13,3 +13,5 @@
 /transcript/
 /src/werewolf_agents/autogen_sample/game_results/
 /src/werewolf_agents/autogen_sample/transcripts/
+/src/werewolf_agents/simple_updated_with_memory/transcripts/
+/src/werewolf_agents/simple_updated_with_memory/game_results/
