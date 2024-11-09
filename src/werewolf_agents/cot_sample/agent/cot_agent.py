@@ -1,11 +1,11 @@
 from typing import Any, Dict
-from autogen import ConversableAgent, Agent, runtime_logging
 
 import os,json,re
 import asyncio
 import logging
 from collections import defaultdict
-
+from dotenv import load_dotenv
+load_dotenv()
 import openai
 from openai import RateLimitError, OpenAI
 from sentient_campaign.agents.v1.api import IReactiveAgent
@@ -203,6 +203,7 @@ Current game situation (including your past thoughts and actions):
         )
         inner_monologue = response.choices[0].message.content
         # self.game_history.append(f"\n [My Thoughts]: {inner_monologue}")
+        logger.error(f"Prompt: {prompt}")
 
         logger.info(f"My Thoughts: {inner_monologue}")
         
@@ -328,8 +329,11 @@ Based on your thoughts, the current situation, and your reflection on the initia
         return action
 
     def _get_discussion_message_or_vote_response_for_common_room(self, message):
-        role_prompt = getattr(self, f"{self.role.upper()}_PROMPT", self.VILLAGER_PROMPT)
-        game_situation = self.get_interwoven_history()
+        effective_role = self.role
+        if effective_role == "wolf":
+            effective_role = "villager"
+        role_prompt = getattr(self, f"{effective_role.upper()}_PROMPT", self.VILLAGER_PROMPT)
+        game_situation = self.get_interwoven_history(include_wolf_channel=False)
         
         specific_prompt = """think through your response by answering the following step-by-step:
 1. What important information has been shared in the recent discussions?
@@ -362,3 +366,40 @@ Based on your thoughts, the current situation, and your reflection on the initia
 
         action = self._get_final_action(self.WOLF_PROMPT, game_situation, inner_monologue, "suggestion for target")        
         return action
+
+
+# # Testing the agent: Make sure to comment out this code when you want to actually run the agent in some games. 
+
+# # Since we are not using the runner, we need to initialize the agent manually using an internal function:
+# agent = CoTAgent()
+# agent._sentient_llm_config = {
+#     "config_list": [{
+#             "llm_model_name": os.getenv("SENTIENT_DEFAULT_LLM_MODEL_NAME"), # add model name here, should be: Llama31-70B-Instruct
+#             "api_key": os.getenv("MY_UNIQUE_API_KEY"), # add your api key here
+#             "llm_base_url": "https://hp3hebj84f.us-west-2.awsapprunner.com"
+#         }]  
+# }
+# agent.__initialize__("Fred", "A werewolf player")
+# print(agent._sentient_llm_config)
+# agent.role = "wolf"
+
+
+# # # Simulate receiving and responding to a message
+# import asyncio
+
+# async def main():
+#     message = ActivityMessage(
+#         content_type=MimeType.TEXT_PLAIN,
+#         header=ActivityMessageHeader(
+#             message_id="456",
+#             sender="moderator",
+#             channel=GAME_CHANNEL,
+#             channel_type=MessageChannelType.GROUP
+#         ),
+#         content=TextContent(text="Tell me about yourself")
+#     )
+
+#     response = await agent.async_respond(message)
+#     print(f"Agent response: {response.response.text}")
+
+# asyncio.run(main())
