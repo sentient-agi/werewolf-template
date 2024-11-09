@@ -292,8 +292,25 @@ Based on your thoughts, the current situation, and your reflection on the initia
         # send the llm the previous summary of each of the other players and suspiciona nd information, the detailed chats of this day or night
         # llm will summarize the game history and provide a summary of the game so far
         # summarized game history is used for current situation
+           # Create a prompt for the Llama model to summarize the game history
+        prompt = f"Summarize the following game history:\n\n{self.detailed_history}\n\nProvide a concise summary of the game so far."
 
-        pass
+        # Send the prompt to the Llama model and get the response
+        response = self.openai_client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": "You are a summarizer for a Werewolf game. Make sure to not miss any key information during summarization."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+
+        # Extract the summarized game history from the response
+        self.summarized_game_history = response.choices[0].message.content.strip("\n ")
+
+        return self.summarized_game_history
+        
+
+        #pass
 
 
     def _get_response_for_seer_guess(self, message):
