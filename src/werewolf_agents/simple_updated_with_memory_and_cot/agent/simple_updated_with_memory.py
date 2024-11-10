@@ -155,7 +155,7 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
 
         assistant_message = f"{response.choices[0].message.content}"
 
-        response = self.cot_response(assistant_message, self.message_history)
+        assistant_message = self.cot_response(assistant_message)
 
         self.message_history.pop(-3)
 
@@ -165,7 +165,7 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
         })
         logger.info(f"Assistant response added to history: {assistant_message}")
 
-        return ActivityResponse(response.choices[0].message.content)
+        return ActivityResponse(assistant_message)
 
     def cot_response(self, assistant_message):
         local_message_history = self.message_history.copy()
@@ -258,18 +258,17 @@ Respond with a new message if you want to update your initial response. Respond 
         return role
 
 
-# # Since we are not using the runner, we need to initialize the agent manually using an internal function:
-# agent = SimpleUpdatedMemoryAgent()
-# agent._sentient_llm_config = {
-#     "config_list": [{
-#         "llm_model_name": "accounts/fireworks/models/llama-v3p1-70b-instruct",
-#         "api_key": "fw_3ZNceYCn3DLzrknzzjVzvDNe",
-#         "llm_base_url": "https://api.fireworks.ai/inference/v1"
-#     }]
-# }
-# agent.__initialize__("Fred", "A werewolf player")
-#
-#
+# Since we are not using the runner, we need to initialize the agent manually using an internal function:
+agent = SimpleUpdatedMemoryAgent()
+agent._sentient_llm_config = {
+    "config_list": [{
+        "llm_model_name": "accounts/fireworks/models/llama-v3p1-70b-instruct",
+        "api_key": "fw_3ZNceYCn3DLzrknzzjVzvDNe",
+        "llm_base_url": "https://api.fireworks.ai/inference/v1"
+    }]
+}
+agent.__initialize__("Fred", "A werewolf player")
+
 # async def main():
 #     message = ActivityMessage(
 #         content_type=MimeType.TEXT_PLAIN,
