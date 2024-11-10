@@ -507,14 +507,14 @@ Based on your thoughts, the current situation, and your reflection on the initia
         game_situation = self.get_interwoven_history(include_wolf_channel=False)
         
         specific_prompt = f"""You are a {effective_role} in a game of Werewolf. Your goal is to identify and eliminate the werewolves. Strategies:
-            1. Analyze Behaviors: Pay close attention to inconsistencies in players' statements and actions.
+            1. Analyze Behaviors: Pay close attention to inconsistencies in players' statements and actions. Are they saying anything irrelevant or distracting the game? 
             2. Active Participation: Engage in discussions to gather information and express your thoughts.
             3. Collaborate: Work with other villagers to form logical accusations based on evidence.
             4. Evidence-Based Accusations: Avoid random accusations; support your claims with specific examples.
             5. Monitor Voting Patterns: Observe who players vote for to identify suspicious behavior.
             6. Protect Key Roles: Avoid exposing the Seer and Doctor; support them subtly.
-            7. Defend Logically: If accused, saying i am {effective_role} and argue that the guy who accused me is a werewolf
-            9. Stay Alert: Be wary of players who are unusually quiet or overly aggressive.
+            7. Defend Logically: If accused, saying i am {effective_role} and argue that the guy who accused me is a werewolf.
+            9. (MOST IMPORTANT) Stay Alert: Be wary of players who are unusually quiet or overly aggressive.
             10. Maintain Consistency: Keep your behavior consistent to avoid raising suspicion."""
 
         inner_monologue = self._get_inner_monologue(role_prompt, game_situation, specific_prompt)
@@ -529,12 +529,11 @@ Based on your thoughts, the current situation, and your reflection on the initia
         game_situation = self.get_interwoven_history(include_wolf_channel=True)
         
         specific_prompt = """think through your response by answering the following step-by-step:
-1. Based on the game history, who are the most dangerous villagers to our werewolf team?
-2. Who might be the Seer or Doctor based on their behavior and comments?
-3. Which potential target would be least likely to raise suspicion if eliminated?
-4. How can we coordinate our actions with other werewolves to maximize our chances of success?
-5. Arrive at a consensus for the target and suggest it to the group. Always make suggestions to eliminate at least one person.
-6. How can we defend ourselves if accused during the day without revealing our roles?"""
+1. If there is someone claimed himself to be seer and doctor, but not your wolf mate, vote him to kill
+2. Who might be the Seer or Doctor based on their behavior and comments? Like are they correctly accused me or the other wolf
+3. Which potential target would be least likely to raise suspicion if eliminated? Like those who do not provide useful information, like claiming himself a villager
+4. Arrive at a consensus for the target and suggest it to the group. Always make suggestions to eliminate at least one person.
+5. How can we defend ourselves if accused during the day without revealing our roles?"""
 
         inner_monologue = self._get_inner_monologue(self.WOLF_PROMPT, game_situation, specific_prompt)
 
