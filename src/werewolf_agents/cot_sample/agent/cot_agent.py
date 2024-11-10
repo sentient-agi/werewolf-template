@@ -482,7 +482,7 @@ Based on your thoughts, the current situation, and your reflection on the initia
         specific_prompt = """think through your response by answering the following step-by-step:
 1. Based on recent discussions, who seems to be in the most danger?
 2. Have I protected myself recently, or do I need to consider self-protection?
-3. Are there any players who might be the Seer or other key roles that I should prioritize?
+3. Are there any players who might be the Seer or other key roles that I should prioritize? If there is a seer, you should save that. 
 4. How can I vary my protection pattern to avoid being predictable to the werewolves?
 5. How can I contribute to the village discussions with or without revealing my role? Should I reveal my role at this point?"""
 
