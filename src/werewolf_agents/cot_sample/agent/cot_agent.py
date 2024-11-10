@@ -490,7 +490,7 @@ Based on your thoughts, the current situation, and your reflection on the initia
         specific_prompt = """think through your response by answering the following step-by-step:
 1. Based on recent discussions, who seems to be in the most danger?
 2. Have I protected myself recently, or do I need to consider self-protection?
-3. Are there any players who might be the Seer or other key roles that I should prioritize? If there is a seer, you should save that. 
+3. Are there any players who might be the Seer or other key roles that I should prioritize? If there is a claimed seer, you should save that. 
 4. How can I vary my protection pattern to avoid being predictable to the werewolves?
 5. How can I contribute to the village discussions with or without revealing my role? Should I reveal my role at this point?"""
 
@@ -505,17 +505,19 @@ Based on your thoughts, the current situation, and your reflection on the initia
             effective_role = "villager"
         role_prompt = getattr(self, f"{effective_role.upper()}_PROMPT", self.VILLAGER_PROMPT)
         game_situation = self.get_interwoven_history(include_wolf_channel=False)
-        
+
         specific_prompt = f"""You are a {effective_role} in a game of Werewolf. Your goal is to identify and eliminate the werewolves. Strategies:
-            1. Analyze Behaviors: Pay close attention to inconsistencies in players' statements and actions. Are they saying anything irrelevant or distracting the game? 
-            2. Active Participation: Engage in discussions to gather information and express your thoughts.
-            3. Collaborate: Work with other villagers to form logical accusations based on evidence.
-            4. Evidence-Based Accusations: Avoid random accusations; support your claims with specific examples.
-            5. Monitor Voting Patterns: Observe who players vote for to identify suspicious behavior.
-            6. Protect Key Roles: Avoid exposing the Seer and Doctor; support them subtly.
-            7. Defend Logically: If accused, saying i am {effective_role} and argue that the guy who accused me is a werewolf.
-            9. (MOST IMPORTANT) Stay Alert: Be wary of players who are unusually quiet or overly aggressive.
-            10. Maintain Consistency: Keep your behavior consistent to avoid raising suspicion."""
+        1. Analyze Behaviors: Pay close attention to inconsistencies in players' statements and actions. 
+        2. Active Participation: Engage in discussions to gather information and express your thoughts.
+        3. Collaborate: Work with other villagers to form logical accusations based on evidence.
+        4. Evidence-Based Accusations: Avoid random accusations; support your claims with specific examples.
+        5. Monitor Voting Patterns: Observe who players vote for to identify suspicious behavior.
+        6. Protect Key Roles: Avoid exposing the Seer and Doctor; support them subtly.
+        7. Defend Logically: If accused, saying i am {effective_role} and argue that the guy who accused me is a werewolf.
+        9. (MOST IMPORTANT) Stay Alert: Be wary of players who are unusually quiet or overly aggressive. Are they saying anything irrelevant or distracting the game? 
+        10. Maintain Consistency: Keep your behavior consistent to avoid raising suspicion."""
+
+
 
         inner_monologue = self._get_inner_monologue(role_prompt, game_situation, specific_prompt)
 
