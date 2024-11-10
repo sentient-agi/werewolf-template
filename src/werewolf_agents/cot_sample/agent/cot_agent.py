@@ -4,8 +4,6 @@ import os,json,re
 import asyncio
 import logging
 from collections import defaultdict
-from dotenv import load_dotenv
-load_dotenv()
 import openai
 from openai import RateLimitError, OpenAI
 from sentient_campaign.agents.v1.api import IReactiveAgent
@@ -203,7 +201,6 @@ Current game situation (including your past thoughts and actions):
         )
         inner_monologue = response.choices[0].message.content
         # self.game_history.append(f"\n [My Thoughts]: {inner_monologue}")
-        logger.error(f"Prompt: {prompt}")
 
         logger.info(f"My Thoughts: {inner_monologue}")
         
@@ -388,6 +385,8 @@ Based on your thoughts, the current situation, and your reflection on the initia
 # # Testing the agent: Make sure to comment out this code when you want to actually run the agent in some games. 
 
 # # Since we are not using the runner, we need to initialize the agent manually using an internal function:
+# from dotenv import load_dotenv
+# load_dotenv()
 # agent = CoTAgent()
 # agent._sentient_llm_config = {
 #     "config_list": [{
