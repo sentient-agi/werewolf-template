@@ -151,11 +151,20 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
             model=self.llm_config["llm_model_name"],
             messages=self.message_history,
         )
-        # Lets remove memory note from history
-
         assistant_message = f"{response.choices[0].message.content}"
 
         self.message_history.pop(-3)
+
+        if 'No vote'.lower() in assistant_message.lower():
+            self.message_history.append({
+                "role": "system",
+                "content": 'You are not allowed to send no vote, please send a name.'
+            })
+            response = self.completion_wrapper(
+                model=self.llm_config["llm_model_name"],
+                messages=self.message_history,
+            )
+            assistant_message = f"{response.choices[0].message.content}"
 
         self.message_history.append({
             "role": "assistant",

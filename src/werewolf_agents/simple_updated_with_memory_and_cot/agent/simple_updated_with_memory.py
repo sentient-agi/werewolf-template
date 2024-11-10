@@ -127,7 +127,7 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
             if (('Day consensus:'.lower() in message_text.lower()
                  or 'Day vote:'.lower() in message_text.lower())
                     or 'Wolf vote:'.lower() in message_text.lower()):
-                content = "If it's a voting part of the game, you should respond with the name now."
+                content = "It's a voting part of the game, you should respond with the name."
                 self.message_history.append({
                     "role": "system",
                     "content": content
@@ -151,13 +151,24 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
             model=self.llm_config["llm_model_name"],
             messages=self.message_history,
         )
-        # Lets remove memory note from history
-
         assistant_message = f"{response.choices[0].message.content}"
+
+        self.message_history.pop(-3)
+
+        if 'No vote'.lower() in assistant_message.lower():
+            self.message_history.append({
+                "role": "system",
+                "content": 'You are not allowed to send no vote, please send a name.'
+            })
+            response = self.completion_wrapper(
+                model=self.llm_config["llm_model_name"],
+                messages=self.message_history,
+            )
+            assistant_message = f"{response.choices[0].message.content}"
 
         assistant_message = self.cot_response(assistant_message)
 
-        self.message_history.pop(-3)
+
 
         self.message_history.append({
             "role": "assistant",

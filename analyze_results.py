@@ -41,11 +41,11 @@ def parse_game_result(game_result_path):
 
 
 def determine_runner(player_classes):
-    if (player_classes.get('wolf', {}).get('agent_type') == 'simple' and
+    if (player_classes.get('wolf', {}).get('agent_type') == 'simple_updated_with_memory_and_cot' and
             player_classes.get('villager', {}).get('agent_type') == 'simple_updated_with_memory'):
         return 'A'
     elif (player_classes.get('wolf', {}).get('agent_type') == 'simple_updated_with_memory' and
-          player_classes.get('villager', {}).get('agent_type') == 'simple'):
+          player_classes.get('villager', {}).get('agent_type') == 'simple_updated_with_memory_and_cot'):
         return 'B'
     else:
         return 'Unknown'
