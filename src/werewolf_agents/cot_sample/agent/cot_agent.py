@@ -334,6 +334,9 @@ class CoTAgent(IReactiveAgent):
         return ActivityResponse(response=response_message)
 
     def _get_inner_monologue(self, role_prompt, game_situation, specific_prompt):
+        effective_role = self.role
+        if effective_role == "wolf":
+            effective_role = "villager"
         prompt = f"""{role_prompt}
 
 Current game situation (including your past thoughts and actions): 
@@ -344,7 +347,7 @@ Current game situation (including your past thoughts and actions):
         response = self.openai_client.chat.completions.create(
             model=self.model,
             messages=[
-                {"role": "system", "content": f"You are a {self.role} in a Werewolf game."},
+                {"role": "system", "content": f"You are a {effective_role} in a Werewolf game."},
                 {"role": "user", "content": prompt}
             ]
         )
@@ -356,6 +359,9 @@ Current game situation (including your past thoughts and actions):
         return inner_monologue
 
     def _get_final_action(self, role_prompt, game_situation, inner_monologue, action_type):
+        effective_role = self.role
+        if effective_role == "wolf":
+            effective_role = "villager"
         prompt = f"""{role_prompt}
 
 Current game situation (including past thoughts and actions): 
@@ -369,7 +375,7 @@ Based on your thoughts and the current situation, what is your {action_type}? Re
         response = self.openai_client.chat.completions.create(
             model=self.model,
             messages=[
-                {"role": "system", "content": f"You are a {self.role} in a Werewolf game. Provide your final {action_type}."},
+                {"role": "system", "content": f"You are a {effective_role} in a Werewolf game. Provide your final {action_type}."},
                 {"role": "user", "content": prompt}
             ]
         )
@@ -397,7 +403,7 @@ Reflect on your final action given the situation and provide any criticisms. Ans
         response = self.openai_client.chat.completions.create(
             model=self.model,
             messages=[
-                {"role": "system", "content": f"You are a {self.role} in a Werewolf game. Reflect on your final action."},
+                {"role": "system", "content": f"You are a {effective_role} in a Werewolf game. Reflect on your final action."},
                 {"role": "user", "content": prompt}
             ]
         )
@@ -424,7 +430,7 @@ Based on your thoughts, the current situation, and your reflection on the initia
         response = self.openai_client.chat.completions.create(
             model=self.model,
             messages=[
-                {"role": "system", "content": f"You are a {self.role} in a Werewolf game. Provide your final {action_type}."},
+                {"role": "system", "content": f"You are a {effective_role} in a Werewolf game. Provide your final {action_type}."},
                 {"role": "user", "content": prompt}
             ]
         )
