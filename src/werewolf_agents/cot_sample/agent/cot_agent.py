@@ -498,13 +498,16 @@ Based on your thoughts, the current situation, and your reflection on the initia
         role_prompt = getattr(self, f"{effective_role.upper()}_PROMPT", self.VILLAGER_PROMPT)
         game_situation = self.get_interwoven_history(include_wolf_channel=False)
         
-        specific_prompt = """think through your response by answering the following step-by-step:
-1. What important information has been shared in the recent discussions?
-2. Based on the game history, who seems most suspicious or trustworthy?
-3. What evidence or observations can I share to help the village without revealing my role?
-4. How can I guide the discussion in a helpful direction based on what I know?
-5. If it's time to vote, who should I vote for and why, considering all the information available?
-6. How do I respond if accused during the day without revealing my role?"""
+        specific_prompt = f"""You are a {effective_role} in a game of Werewolf. Your goal is to identify and eliminate the werewolves. Strategies:
+            1. Analyze Behaviors: Pay close attention to inconsistencies in players' statements and actions.
+            2. Active Participation: Engage in discussions to gather information and express your thoughts.
+            3. Collaborate: Work with other villagers to form logical accusations based on evidence.
+            4. Evidence-Based Accusations: Avoid random accusations; support your claims with specific examples.
+            5. Monitor Voting Patterns: Observe who players vote for to identify suspicious behavior.
+            6. Protect Key Roles: Avoid exposing the Seer and Doctor; support them subtly.
+            7. Defend Logically: If accused, saying i am {effective_role} and argue that the guy who accused me is a werewolf
+            9. Stay Alert: Be wary of players who are unusually quiet or overly aggressive.
+            10. Maintain Consistency: Keep your behavior consistent to avoid raising suspicion."""
 
         inner_monologue = self._get_inner_monologue(role_prompt, game_situation, specific_prompt)
 
