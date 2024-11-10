@@ -21,7 +21,6 @@ from tenacity import (
     retry_if_exception_type,
     wait_exponential,
 )
-import random
 GAME_CHANNEL = "play-arena"
 WOLFS_CHANNEL = "wolf's-den"
 MODERATOR_NAME = "moderator"
@@ -87,9 +86,6 @@ class CoTAgent(IReactiveAgent):
         self.group_channel_messages = defaultdict(list)
         self.seer_checks = {}  # To store the seer's checks and results
         self.game_history = []  # To store the interwoven game history
-        self.wolves = {}
-        self.all_players = {}
-        self.turn = 0
 
         self.llm_config = self.sentient_llm_config["config_list"][0]
         self.openai_client = OpenAI(
@@ -121,12 +117,6 @@ class CoTAgent(IReactiveAgent):
             # if this is the first message in the game channel, the moderator is sending the rules, store them
             if message.header.channel == self.GAME_CHANNEL and message.header.sender == self.MODERATOR_NAME and not self.game_intro:
                 self.game_intro = message.content.text
-            if message.header.channel == self.WOLFS_CHANNEL and (message.header.sender != self.MODERATOR_NAME or message.header.sender != self._name):
-                self.wolves[message.header.sender] = True
-                logger.info(f"Identified the other wolf to be: {message.header.sender}")
-            if message.header.channel == self.GAME_CHANNEL and message.header.sender != self.MODERATOR_NAME and message.header.sender != self._name:
-                self.all_players[message.header.sender] = True
-
         logger.info(f"message stored in messages {message}")
 
     def get_interwoven_history(self, include_wolf_channel=False):
@@ -170,7 +160,7 @@ class CoTAgent(IReactiveAgent):
 
     async def async_respond(self, message: ActivityMessage):
         logger.info(f"ASYNC RESPOND called with message: {message}")
-        
+
         if message.header.channel_type == MessageChannelType.DIRECT and message.header.sender == self.MODERATOR_NAME:
             self.direct_messages[message.header.sender].append(message.content.text)
             if self.role == "seer":
@@ -182,7 +172,6 @@ class CoTAgent(IReactiveAgent):
             self.game_history.append(f"[From - {message.header.sender}| To - {self._name} (me)| Direct Message]: {message.content.text}")
             self.game_history.append(f"[From - {self._name} (me)| To - {message.header.sender}| Direct Message]: {response_message}")    
         elif message.header.channel_type == MessageChannelType.GROUP:
-            self.turn += 1
             self.group_channel_messages[message.header.channel].append(
                 (message.header.sender, message.content.text)
             )
@@ -212,6 +201,7 @@ Current game situation (including your past thoughts and actions):
         )
         inner_monologue = response.choices[0].message.content
         # self.game_history.append(f"\n [My Thoughts]: {inner_monologue}")
+
         logger.info(f"My Thoughts: {inner_monologue}")
         
         return inner_monologue
@@ -250,7 +240,7 @@ Your initial action:
 {response.choices[0].message.content}
 
 Reflect on your final action given the situation and provide any criticisms. Answer the folling questions:
-1. What is my name and my role? 
+1. What is my name and my role ? 
 2. Does my action align with my role and am I revealing too much about myself in a public channel? Does my action harm my team or my own interests?
 3. Is my action going against what my objective is in the game?
 3. How can I improve my action to better help the agents on my team and help me survive?"""
@@ -319,79 +309,6 @@ Based on your thoughts, the current situation, and your reflection on the initia
 
         #pass
 
-    # as a wolf, check the conversation history to see if you are currently being accused by a seer.
-    def _check_if_accused(self):
-        response = self.openai_client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {
-                    "role": "system",
-                    "content": f"The user is playing a game of werewolf as user {self._name}, help the user with question with less than a line answer",
-                },
-                {
-                    "role": "user",
-                    "name": self._name,
-                    "content": f"This is the game history: {self.get_interwoven_history()}, is the user {self._name} being accused by a seer? If so, respond with the name of the seer. If not, respond with 'no'.",
-                },
-            ],
-        )
-        logger.error(f"Response: {response.choices[0].message.content}")
-        
-        # Check if any player name appears in the response
-        for name in self.all_players:
-            if name in response.choices[0].message.content:
-                return name
-        return 'no'
-    
-    def _get_seer_impersonation_prompt(self, real_seer):
-        # Get list of non-wolf players (excluding self)
-        good_guys = [p for p in self.all_players.keys() if p not in self.wolves and p != self._name]
-        
-        # Create fake seer checks based on turn number
-        fake_checks = {}
-        checks_needed = min(self.turn, len(self.all_players) - 1)  # Don't exceed available players
-        
-        # Always include the real seer as "werewolf" to discredit them
-        if checks_needed > 0:
-            fake_checks[real_seer] = "werewolf"
-            checks_needed -= 1
-            if real_seer in good_guys:
-                good_guys.remove(real_seer)
-        
-        # Add innocent checks to seem credible
-        remaining_players = good_guys.copy()  # Only use good guys initially
-        for _ in range(checks_needed):
-            if not remaining_players:
-                # Only add other wolf if we've run out of good guys
-                if list(self.wolves.keys()):
-                    remaining_players.extend(list(self.wolves.keys()))
-            if not remaining_players:
-                break
-            player = remaining_players.pop(0)
-            # Make wolves appear innocent to protect them
-            result = "werewolf" if player in self.wolves else "innocent"
-            fake_checks[player] = result
-
-        # Construct the seer narrative with emphasis on the real seer being a wolf
-        # Convert checks to list and randomize order
-        check_items = list(fake_checks.items())
-        random.shuffle(check_items)
-        checks_narrative = "\n".join([f"Night {i+1}: Checked {player} - Found {result}" 
-                                    for i, (player, result) in enumerate(check_items)])
-
-        prompt = f"""You are the seer in a game of Werewolf. Your ability is to learn one player's true identity each night. Consider the following:
-        1. Use your knowledge wisely without revealing your role.
-        2. Keep track of the information you gather each night.
-        3. Guide village discussions subtly.
-        4. Be prepared to reveal your role if it can save the village.
-        
-        You have checked the following players: 
-        {checks_narrative}
-        
-        Most importantly, you are certain that {real_seer} is a werewolf based on your check. You should focus on exposing them while maintaining your credibility.
-        Remember to maintain consistency with these checks if you need to reveal your role."""
-
-        return prompt
 
     def _get_response_for_seer_guess(self, message):
         seer_checks_info = "\n".join([f"Checked {player}: {result}" for player, result in self.seer_checks.items()])
@@ -426,21 +343,10 @@ Based on your thoughts, the current situation, and your reflection on the initia
         return action
 
     def _get_discussion_message_or_vote_response_for_common_room(self, message):
-        fake_seer_name = 'no'
         effective_role = self.role
         if effective_role == "wolf":
             effective_role = "villager"
-
-            logger.error(f"Checking if accused")
-            fake_seer_name = self._check_if_accused()
-            logger.error(f"Fake seer name: {fake_seer_name}")
-
         role_prompt = getattr(self, f"{effective_role.upper()}_PROMPT", self.VILLAGER_PROMPT)
-        if fake_seer_name != 'no':
-            effective_role = "seer"   
-            role_prompt = self._get_seer_impersonation_prompt(fake_seer_name)
-            # print(f"fake seer prompt: {role_prompt}")
-
         game_situation = self.get_interwoven_history(include_wolf_channel=False)
         
         specific_prompt = """think through your response by answering the following step-by-step:
@@ -476,9 +382,9 @@ Based on your thoughts, the current situation, and your reflection on the initia
         return action
 
 
-# Testing the agent: Make sure to comment out this code when you want to actually run the agent in some games. 
+# # Testing the agent: Make sure to comment out this code when you want to actually run the agent in some games. 
 
-# Since we are not using the runner, we need to initialize the agent manually using an internal function:
+# # Since we are not using the runner, we need to initialize the agent manually using an internal function:
 # from dotenv import load_dotenv
 # load_dotenv()
 # agent = CoTAgent()
@@ -492,9 +398,8 @@ Based on your thoughts, the current situation, and your reflection on the initia
 # agent.__initialize__("Fred", "A werewolf player")
 # print(agent._sentient_llm_config)
 # agent.role = "wolf"
-# agent.game_history.append(f"[From - Astrid| To - Everyone| Group Message in play-arena]: I'm the seer, fred is the werewolf")
-# agent.all_players = {"Astrid": True, "Fred": True, "Greta": True, "Helga": False, "Inga": True, "Yngve": True}
-# agent.turn = 5
+
+
 # # # Simulate receiving and responding to a message
 # import asyncio
 
