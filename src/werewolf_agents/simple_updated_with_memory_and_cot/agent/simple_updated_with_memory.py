@@ -190,8 +190,11 @@ Respond with a new message if you want to update your initial response. Respond 
         )
         cot_message = f"{response.choices[0].message.content}"
         if 'continue' in cot_message.lower():
+            logger.info(cot_message)
             return assistant_message
         else:
+            logger.info("Updated response:")
+            logger.info(cot_message)
             return cot_message
 
     @retry(stop_max_attempt_number=3, wait_fixed=4000)
