@@ -155,8 +155,6 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
 
         assistant_message = f"{response.choices[0].message.content}"
 
-        response = self.cot_response(assistant_message, self.message_history)
-
         self.message_history.pop(-3)
 
         self.message_history.append({
@@ -166,33 +164,6 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
         logger.info(f"Assistant response added to history: {assistant_message}")
 
         return ActivityResponse(response.choices[0].message.content)
-
-    def cot_response(self, assistant_message):
-        local_message_history = self.message_history.copy()
-        local_message_history.append({
-            "role": "system",
-            "content": f"""
-            This is your response to this situation: 
-{assistant_message}
-
-Please verify the following:
-- If asked to vote for someone by moderator, did you vote a specific name?
-- Does my action align with my role and am I revealing too much about myself in a public channel?
-- Is my action going against what my objective is in the game?
-- How can I improve my action to better help the agents on my team and help me survive?
-
-Respond with a new message if you want to update your initial response. Respond with 'continue' if the initial response is good enough.
-"""
-        })
-        response = self.completion_wrapper(
-            model=self.llm_config["llm_model_name"],
-            messages=local_message_history,
-        )
-        cot_message = f"{response.choices[0].message.content}"
-        if 'continue' in cot_message.lower():
-            return assistant_message
-        else:
-            return cot_message
 
     @retry(stop_max_attempt_number=3, wait_fixed=4000)
     def completion_wrapper(self, model, messages):
@@ -256,8 +227,8 @@ Respond with a new message if you want to update your initial response. Respond 
             raise Exception("Role not found")
 
         return role
-#
-#
+
+
 # # Since we are not using the runner, we need to initialize the agent manually using an internal function:
 # agent = SimpleUpdatedMemoryAgent()
 # agent._sentient_llm_config = {
