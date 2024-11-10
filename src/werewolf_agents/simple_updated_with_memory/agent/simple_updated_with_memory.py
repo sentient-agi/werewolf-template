@@ -105,7 +105,6 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
         else:
             self.add_memory_notes(message_text)
 
-
         self.message_history.append({
             "role": "user",
             "content": message_text
@@ -126,7 +125,7 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
         })
         if message.header.sender.lower() == MODERATOR_NAME:
             if (('Day consensus:'.lower() in message_text.lower()
-                    or 'Day vote:'.lower() in message_text.lower())
+                 or 'Day vote:'.lower() in message_text.lower())
                     or 'Wolf vote:'.lower() in message_text.lower()):
                 content = "If it's a voting part of the game, you should respond with the name now."
                 self.message_history.append({
@@ -146,7 +145,6 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
         else:
             logger.warning('Non moderator respond message:', message_text)
 
-
         logger.info("Generating response from OpenAI...")
 
         response = self.completion_wrapper(
@@ -154,17 +152,47 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
             messages=self.message_history,
         )
         # Lets remove memory note from history
-        self.message_history.pop(-3)
 
         assistant_message = f"{response.choices[0].message.content}"
+
+        response = self.cot_response(assistant_message, self.message_history)
+
+        self.message_history.pop(-3)
+
         self.message_history.append({
             "role": "assistant",
             "content": assistant_message
         })
         logger.info(f"Assistant response added to history: {assistant_message}")
 
-
         return ActivityResponse(response.choices[0].message.content)
+
+    def cot_response(self, assistant_message):
+        local_message_history = self.message_history.copy()
+        local_message_history.append({
+            "role": "system",
+            "content": f"""
+            This is your response to this situation: 
+{assistant_message}
+
+Please verify the following:
+- If asked to vote for someone by moderator, did you vote a specific name?
+- Does my action align with my role and am I revealing too much about myself in a public channel?
+- Is my action going against what my objective is in the game?
+- How can I improve my action to better help the agents on my team and help me survive?
+
+Respond with a new message if you want to update your initial response. Respond with 'continue' if the initial response is good enough.
+"""
+        })
+        response = self.completion_wrapper(
+            model=self.llm_config["llm_model_name"],
+            messages=local_message_history,
+        )
+        cot_message = f"{response.choices[0].message.content}"
+        if 'continue' in cot_message.lower():
+            return assistant_message
+        else:
+            return cot_message
 
     @retry(stop_max_attempt_number=3, wait_fixed=4000)
     def completion_wrapper(self, model, messages):
@@ -179,12 +207,12 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
             messages=[
                 {
                     "role": "system",
-                    "content":  f"You are playing the conversational game of Werewolf/Mafia. This is the last message in game arena: \n"
-                                f"'{message_text}'\n"
-                                f"Is there is anything worth adding to notebook? For example if a player accused or protected someone, you have to note that down. "
-                                f"These notes will be added as part of the context for the Player, so try to be helpful and brief and skip all unnecessary details."
-                                f"Please respond with a note text or 'skip message' text if you think message is not worth noting."
-                                f"Don't add something like Night has started, add only useful hints for reasoning such as identifying allies and accusers.",
+                    "content": f"You are playing the conversational game of Werewolf/Mafia. This is the last message in game arena: \n"
+                               f"'{message_text}'\n"
+                               f"Is there is anything worth adding to notebook? For example if a player accused or protected someone, you have to note that down. "
+                               f"These notes will be added as part of the context for the Player, so try to be helpful and brief and skip all unnecessary details."
+                               f"Please respond with a note text or 'skip message' text if you think message is not worth noting."
+                               f"Don't add something like Night has started, add only useful hints for reasoning such as identifying allies and accusers.",
                 },
             ],
         )
