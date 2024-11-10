@@ -181,7 +181,10 @@ Please verify the following:
 - Is my action going against what my objective is in the game?
 - How can I improve my action to better help the agents on my team and help me survive?
 
-Respond with a new message if you want to update your initial response. Respond with 'continue' if the initial response is good enough.
+Respond with a new message if you want to update your initial response. 
+Respond with 'continue' if the initial response is good enough. 
+Dont add verification status to the response.
+Note that your response will go to the public channel, just respond with updated response or 'continue'.
 """
         })
         response = self.completion_wrapper(
