@@ -248,32 +248,32 @@ agent._sentient_llm_config = {
     }]
 }
 agent.__initialize__("Fred", "A werewolf player")
-
-
-async def main():
-    message = ActivityMessage(
-        content_type=MimeType.TEXT_PLAIN,
-        header=ActivityMessageHeader(
-            message_id="456",
-            sender=MODERATOR_NAME,
-            channel="direct",
-            channel_type=MessageChannelType.DIRECT
-        ),
-        content=TextContent(text="Im assigning you as a werewolf. Players: Frodo, Samwise, Meriadoc, Peregrin, Bilbo, Hamfast, Fredegar, Lotho.")
-    )
-    await agent.async_notify(message)
-
-    message = ActivityMessage(
-        content_type=MimeType.TEXT_PLAIN,
-        header=ActivityMessageHeader(
-            message_id="458",
-            sender="Moderator",
-            channel="Play arena",
-            channel_type=MessageChannelType.GROUP
-        ),
-        content=TextContent(text="Discussion: \n Hi, who do you think is or is not a wolf in the group and why?")
-    )
-    response = await agent.async_respond(message)
-    print(f"Agent response: {response.response.text}")
-
-asyncio.run(main())
+#
+#
+# async def main():
+#     message = ActivityMessage(
+#         content_type=MimeType.TEXT_PLAIN,
+#         header=ActivityMessageHeader(
+#             message_id="456",
+#             sender=MODERATOR_NAME,
+#             channel="direct",
+#             channel_type=MessageChannelType.DIRECT
+#         ),
+#         content=TextContent(text="Im assigning you as a werewolf. Players: Frodo, Samwise, Meriadoc, Peregrin, Bilbo, Hamfast, Fredegar, Lotho.")
+#     )
+#     await agent.async_notify(message)
+#
+#     message = ActivityMessage(
+#         content_type=MimeType.TEXT_PLAIN,
+#         header=ActivityMessageHeader(
+#             message_id="458",
+#             sender="Moderator",
+#             channel="Play arena",
+#             channel_type=MessageChannelType.GROUP
+#         ),
+#         content=TextContent(text="Discussion: \n Hi, who do you think is or is not a wolf in the group and why?")
+#     )
+#     response = await agent.async_respond(message)
+#     print(f"Agent response: {response.response.text}")
+#
+# asyncio.run(main())

@@ -25,10 +25,10 @@ load_dotenv()
 
 # Default role distribution
 DEFAULT_ROLE_DISTRIBUTION = {
-    "wolf": {"agent_type": "simple_updated_with_memory_and_cot", "count": 2},
-    "villager": {"agent_type": "simple_updated_with_memory_and_cot", "count": 4},
-    "seer": {"agent_type": "simple_updated_with_memory_and_cot", "count": 1},
-    "doctor": {"agent_type": "simple_updated_with_memory_and_cot", "count": 1}
+    "wolf": {"agent_type": "simple_updated_with_memory", "count": 2},
+    "villager": {"agent_type": "simple_updated_with_memory", "count": 4},
+    "seer": {"agent_type": "simple_updated_with_memory", "count": 1},
+    "doctor": {"agent_type": "simple_updated_with_memory", "count": 1}
 }
 # Your Sentient API key
 SENTIENT_API_KEY = os.getenv("MY_UNIQUE_API_KEY")
