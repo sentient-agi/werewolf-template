@@ -1,0 +1,6 @@
+**/.env
+venv/
+
+**/dist/
+**/game_results/
+**/transcripts/

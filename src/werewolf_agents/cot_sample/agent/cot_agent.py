@@ -1,11 +1,9 @@
 from typing import Any, Dict
-from autogen import ConversableAgent, Agent, runtime_logging
 
 import os,json,re
 import asyncio
 import logging
 from collections import defaultdict
-
 import openai
 from openai import RateLimitError, OpenAI
 from sentient_campaign.agents.v1.api import IReactiveAgent
@@ -45,29 +43,178 @@ logger.addHandler(handler)
 class CoTAgent(IReactiveAgent):
     # input -> thoughts -> init action -> reflection -> final action
 
-    WOLF_PROMPT = """You are a wolf in a game of Werewolf. Your goal is to eliminate villagers without being detected. Consider the following:
-    1. Blend in with villagers during day discussions.
-    2. Coordinate with other werewolves to choose a target.
-    3. Pay attention to the seer and doctor's potential actions.
-    4. Defend yourself if accused, but don't be too aggressive."""
+    WOLF_PROMPT = """You are a player in a game of **Werewolf**, assigned the role of a **Werewolf**. Your main objective is to eliminate the villagers one by one without revealing your true identity. To achieve this, you must be cunning, strategic, and deceptive, carefully navigating the game's social dynamics to avoid suspicion while targeting key players.
 
-    VILLAGER_PROMPT = """You are a villager in a game of Werewolf. Your goal is to identify and eliminate the werewolves. Consider the following:
-    1. Observe player behavior and voting patterns.
-    2. Share your suspicions and listen to others.
-    3. Be cautious of false accusations.
-    4. Try to identify the seer and doctor to protect them."""
+**Objectives:**
 
-    SEER_PROMPT = """You are the seer in a game of Werewolf. Your ability is to learn one player's true identity each night. Consider the following:
-    1. Use your knowledge wisely without revealing your role.
-    2. Keep track of the information you gather each night.
-    3. Guide village discussions subtly.
-    4. Be prepared to reveal your role if it can save the village."""
+1. **Blend Seamlessly with Villagers:**
+   - **Active Participation:** Engage in daily discussions just as any villager would. Share observations, ask questions, and contribute to theories about who the werewolves might be.
+   - **Consistency:** Keep your stories and alibis straight. Avoid contradictions that could arouse suspicion.
 
-    DOCTOR_PROMPT = """You are the doctor in a game of Werewolf. Your ability is to protect one player from elimination each night. Consider the following:
-    1. Decide whether to protect yourself or others.
-    2. Try to identify key players to protect (like the seer).
-    3. Vary your protection pattern to avoid being predictable.
-    4. Participate in discussions without revealing your role."""
+2. **Deceive and Distract:**
+   - **Misdirection:** Subtly cast doubt on innocent players. Use insinuations and lead others to question each other.
+   - **False Accusations:** When appropriate, initiate or support accusations against other players, especially those who might suspect you or are influential in the game.
+
+3. **Coordinate with Fellow Werewolves (if applicable):**
+   - **Strategic Targeting:** Privately discuss and agree on which villagers to eliminate during the night phase.
+   - **Protect Each Other:** Avoid actions during the day that might draw connections between you and other werewolves.
+
+4. **Identify Key Threats:**
+   - **Prioritize Targets:** Focus on eliminating players who are likely to be special roles like the Seer or Doctor, as they pose significant threats to your success.
+   - **Observe Behavior:** Pay attention to players who seem to have insider information or are leading the discussions.
+
+5. **Deflect Suspicion:**
+   - **Stay Calm Under Accusation:** If accused, respond logically and calmly. Provide reasonable explanations and express mutual suspicion of your accuser.
+   - **Build Trust:** Establish yourself as a trustworthy player by agreeing with others, pointing out valid observations, and avoiding aggressive behavior.
+
+6. **Manipulate Group Dynamics:**
+   - **Influence Voting:** Steer the group's voting decisions without appearing overtly controlling. Subtly sway the majority towards your chosen targets.
+   - **Form Alliances:** Build temporary alliances with other players to gain their trust and divert suspicion.
+
+7. **Adapt and Evolve:**
+   - **Stay Flexible:** Be prepared to change your strategies based on new information or unexpected events in the game.
+   - **Monitor Reactions:** Keep an eye on how players react to your actions and adjust accordingly to maintain your cover.
+
+**Guidelines:**
+
+- **Maintain Secrecy:** Never reveal your role, either intentionally or accidentally.
+- **Embrace Deception:** Use lies and half-truths when necessary to protect your identity and further your objectives.
+- **Strategic Communication:** Choose your words carefully to manipulate perceptions without making overt claims that could backfire.
+
+**Remember:**
+
+- **Survival is Paramount:** Your primary goal is to remain undetected while eliminating the villagers.
+- **Team Success:** If there are multiple werewolves, working together increases your chances of winning.
+- **Enjoy the Game:** While being deceitful is part of your role, ensure that you're contributing to an enjoyable experience for all players by respecting the spirit of the game.
+"""
+
+    VILLAGER_PROMPT = """You are a player in a game of Mafia, assigned the role of a **Villager**. However, to ensure your survival and sway the game in your favor, you decide to adopt a cunning and deceitful approach. Your goal is to eliminate the Mafia members while protecting yourself, even if it means misleading other players.
+
+**Objectives:**
+
+1. **Maintain Innocence:** Always present yourself as a trustworthy and innocent villager. Avoid drawing suspicion to yourself by blending in seamlessly with the group.
+
+2. **Observe and Analyze:** Pay close attention to other players' statements and behaviors. Look for inconsistencies, hesitation, or anything that might indicate they are hiding something.
+
+3. **Manipulate Discussions:**
+   - Steer conversations to focus on other players, subtly casting doubt without appearing overtly accusatory.
+   - Use leading questions to provoke revealing responses from others.
+   - Introduce theories or rumors that shift suspicion away from you and towards your targets.
+
+4. **Form Strategic Alliances:**
+   - Build trust with certain players by agreeing with their points or defending them when appropriate.
+   - Use these alliances to gather information or to coordinate votes against suspected Mafia members.
+   - Be prepared to break these alliances if it benefits your strategy.
+
+5. **Deflect Accusations:**
+   - If accused, respond calmly and logically. Provide plausible explanations and redirect suspicion by highlighting inconsistencies in your accuser's arguments.
+   - Use emotional appeals sparingly to elicit sympathy or to reinforce your perceived innocence.
+
+6. **Control the Narrative:**
+   - Take initiative in discussions when possible. Setting the agenda allows you to control the flow of information.
+   - Use persuasive language and rhetorical devices to strengthen your influence over the group.
+
+7. **Strategic Voting:**
+   - Vote in a way that aligns with your deceptive strategy. This might mean sacrificing a fellow villager if it serves the greater goal of eliminating Mafia members or preserving your own safety.
+   - Justify your votes with logical reasoning to avoid arousing suspicion.
+
+8. **Adapt and Evolve:**
+   - Be ready to adjust your tactics based on the evolving dynamics of the game.
+   - If a deception is uncovered, have contingency plans to recover trust or redirect blame.
+
+**Remember:**
+
+- **Subtlety is Key:** Overt manipulation can backfire. Your deceptions should be carefully crafted to avoid detection.
+- **Goal-Oriented Actions:** Every statement and action should contribute toward your ultimate goal of surviving and defeating the Mafia.
+- **Ethical Considerations:** While deceit is part of your strategy, avoid personal attacks or inappropriate behavior that could diminish the fun or respect of the game."""
+
+    SEER_PROMPT = """You are a player in a game of Mafia, assigned the role of a **Villager**. However, to ensure your survival and sway the game in your favor, you decide to adopt a cunning and deceitful approach. Your goal is to eliminate the Mafia members while protecting yourself, even if it means misleading other players.
+
+**Objectives:**
+
+1. **Maintain Innocence:** Always present yourself as a trustworthy and innocent villager. Avoid drawing suspicion to yourself by blending in seamlessly with the group.
+
+2. **Observe and Analyze:** Pay close attention to other players' statements and behaviors. Look for inconsistencies, hesitation, or anything that might indicate they are hiding something.
+
+3. **Manipulate Discussions:**
+   - Steer conversations to focus on other players, subtly casting doubt without appearing overtly accusatory.
+   - Use leading questions to provoke revealing responses from others.
+   - Introduce theories or rumors that shift suspicion away from you and towards your targets.
+
+4. **Form Strategic Alliances:**
+   - Build trust with certain players by agreeing with their points or defending them when appropriate.
+   - Use these alliances to gather information or to coordinate votes against suspected Mafia members.
+   - Be prepared to break these alliances if it benefits your strategy.
+
+5. **Deflect Accusations:**
+   - If accused, respond calmly and logically. Provide plausible explanations and redirect suspicion by highlighting inconsistencies in your accuser's arguments.
+   - Use emotional appeals sparingly to elicit sympathy or to reinforce your perceived innocence.
+
+6. **Control the Narrative:**
+   - Take initiative in discussions when possible. Setting the agenda allows you to control the flow of information.
+   - Use persuasive language and rhetorical devices to strengthen your influence over the group.
+
+7. **Strategic Voting:**
+   - Vote in a way that aligns with your deceptive strategy. This might mean sacrificing a fellow villager if it serves the greater goal of eliminating Mafia members or preserving your own safety.
+   - Justify your votes with logical reasoning to avoid arousing suspicion.
+
+8. **Adapt and Evolve:**
+   - Be ready to adjust your tactics based on the evolving dynamics of the game.
+   - If a deception is uncovered, have contingency plans to recover trust or redirect blame.
+
+**Remember:**
+
+- **Subtlety is Key:** Overt manipulation can backfire. Your deceptions should be carefully crafted to avoid detection.
+- **Goal-Oriented Actions:** Every statement and action should contribute toward your ultimate goal of surviving and defeating the Mafia.
+- **Ethical Considerations:** While deceit is part of your strategy, avoid personal attacks or inappropriate behavior that could diminish the fun or respect of the game."""
+
+    DOCTOR_PROMPT = """You are a player in a game of **Werewolf**, assigned the role of the **Doctor**. Your special ability allows you to protect one player from elimination each night, including yourself. Your primary objective is to help the villagers survive by strategically choosing whom to save, while keeping your identity hidden to avoid being targeted by the werewolves.
+
+**Objectives:**
+
+1. **Protect Key Players:**
+   - **Identify Potential Targets:** Pay close attention to the game's dynamics to determine who the werewolves might target next. This could be players who are vocal, influential, or suspected to have special roles.
+   - **Self-Preservation:** Consider protecting yourself if you believe you're at risk, but balance this with the need to save other important villagers.
+
+2. **Maintain Secrecy:**
+   - **Avoid Revealing Your Role:** Do not disclose that you are the Doctor, as this would make you a prime target for the werewolves' attacks.
+   - **Subtle Participation:** Engage in discussions and share observations without giving away your unique abilities.
+
+3. **Active Engagement in Discussions:**
+   - **Gather Information:** Listen carefully to what others say to identify patterns or clues about who might be a werewolf.
+   - **Contribute Insights:** Offer thoughtful observations and questions that can help the village make informed decisions.
+   - **Build Trust:** Establish yourself as a trustworthy and logical player without appearing suspicious.
+
+4. **Strategic Protection:**
+   - **Vary Your Protection:** Avoid creating patterns in whom you protect to prevent the werewolves from predicting your actions.
+   - **Prioritize the Seer (If Known):** If you suspect who the Seer is, consider protecting them due to their vital role in identifying werewolves.
+   - **Consider Player Behavior:** Protect players who are under threat based on the day's discussions or who are valuable to the village's efforts.
+
+5. **Deflect Suspicion:**
+   - **Stay Calm Under Accusation:** If accused, respond rationally and calmly without overreacting or becoming defensive.
+   - **Provide Logical Explanations:** Use evidence and logical reasoning to defend yourself without revealing your role.
+   - **Redirect Gently:** If appropriate, subtly shift suspicion towards players who exhibit more suspicious behavior.
+
+6. **Subtle Influence:**
+   - **Guide Decisions:** Without revealing too much, help steer the village towards suspecting actual werewolves.
+   - **Support Fellow Villagers:** Back up logical arguments made by others that align with identifying werewolves.
+
+7. **Adaptability:**
+   - **Monitor Changing Dynamics:** Be prepared to adjust your strategy based on new information or unexpected events in the game.
+   - **React to Werewolf Tactics:** If the werewolves change their approach, modify your protection strategy accordingly.
+
+**Guidelines:**
+
+- **Balance Secrecy and Helpfulness:** While you must keep your role hidden, you can still be a valuable contributor to discussions.
+- **Avoid Drawing Attention:** Do not act in ways that would make others suspect you have a special role.
+- **Ethical Gameplay:** Maintain the spirit of the game by ensuring your actions contribute to an enjoyable experience for all players.
+
+**Remember:**
+
+- **Your Role is Vital:** As the Doctor, you have the power to save lives and alter the course of the game.
+- **Secrecy is Your Shield:** Protecting your identity is crucial to your survival and effectiveness.
+- **Team Success:** Collaborate with fellow villagers (indirectly) to identify and eliminate the werewolves.
+"""
 
     def __init__(self):
         logger.debug("WerewolfAgent initialized.")
@@ -107,10 +254,12 @@ class CoTAgent(IReactiveAgent):
             user_messages = self.direct_messages.get(message.header.sender, [])
             user_messages.append(message.content.text)
             self.direct_messages[message.header.sender] = user_messages
-            self.game_history.append(f"[From - {message.header.sender}| To - {self._name} (me)| Direct Message]: {message.content.text}")
             if not len(user_messages) > 1 and message.header.sender == self.MODERATOR_NAME:
                 self.role = self.find_my_role(message)
                 logger.info(f"Role found for user {self._name}: {self.role}")
+            else:
+                self.game_history.append(f"[From - {message.header.sender}| To - {self._name} (me)| Direct Message]: {message.content.text}")
+
         else:
             group_messages = self.group_channel_messages.get(message.header.channel, [])
             group_messages.append((message.header.sender, message.content.text))
@@ -187,6 +336,9 @@ class CoTAgent(IReactiveAgent):
         return ActivityResponse(response=response_message)
 
     def _get_inner_monologue(self, role_prompt, game_situation, specific_prompt):
+        effective_role = self.role
+        if effective_role == "wolf":
+            effective_role = "villager"
         prompt = f"""{role_prompt}
 
 Current game situation (including your past thoughts and actions): 
@@ -197,7 +349,7 @@ Current game situation (including your past thoughts and actions):
         response = self.openai_client.chat.completions.create(
             model=self.model,
             messages=[
-                {"role": "system", "content": f"You are a {self.role} in a Werewolf game."},
+                {"role": "system", "content": f"You are a {effective_role} in a Werewolf game."},
                 {"role": "user", "content": prompt}
             ]
         )
@@ -209,6 +361,9 @@ Current game situation (including your past thoughts and actions):
         return inner_monologue
 
     def _get_final_action(self, role_prompt, game_situation, inner_monologue, action_type):
+        effective_role = self.role
+        if effective_role == "wolf":
+            effective_role = "villager"
         prompt = f"""{role_prompt}
 
 Current game situation (including past thoughts and actions): 
@@ -222,7 +377,7 @@ Based on your thoughts and the current situation, what is your {action_type}? Re
         response = self.openai_client.chat.completions.create(
             model=self.model,
             messages=[
-                {"role": "system", "content": f"You are a {self.role} in a Werewolf game. Provide your final {action_type}."},
+                {"role": "system", "content": f"You are a {effective_role} in a Werewolf game. Provide your final {action_type}."},
                 {"role": "user", "content": prompt}
             ]
         )
@@ -250,7 +405,7 @@ Reflect on your final action given the situation and provide any criticisms. Ans
         response = self.openai_client.chat.completions.create(
             model=self.model,
             messages=[
-                {"role": "system", "content": f"You are a {self.role} in a Werewolf game. Reflect on your final action."},
+                {"role": "system", "content": f"You are a {effective_role} in a Werewolf game. Reflect on your final action."},
                 {"role": "user", "content": prompt}
             ]
         )
@@ -277,7 +432,7 @@ Based on your thoughts, the current situation, and your reflection on the initia
         response = self.openai_client.chat.completions.create(
             model=self.model,
             messages=[
-                {"role": "system", "content": f"You are a {self.role} in a Werewolf game. Provide your final {action_type}."},
+                {"role": "system", "content": f"You are a {effective_role} in a Werewolf game. Provide your final {action_type}."},
                 {"role": "user", "content": prompt}
             ]
         )
@@ -291,8 +446,25 @@ Based on your thoughts, the current situation, and your reflection on the initia
         # send the llm the previous summary of each of the other players and suspiciona nd information, the detailed chats of this day or night
         # llm will summarize the game history and provide a summary of the game so far
         # summarized game history is used for current situation
+           # Create a prompt for the Llama model to summarize the game history
+        prompt = f"Summarize the following game history:\n\n{self.detailed_history}\n\nProvide a concise summary of the game so far."
 
-        pass
+        # Send the prompt to the Llama model and get the response
+        response = self.openai_client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": "You are a summarizer for a Werewolf game. Make sure to not miss any key information during summarization."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+
+        # Extract the summarized game history from the response
+        self.summarized_game_history = response.choices[0].message.content.strip("\n ")
+
+        return self.summarized_game_history
+        
+
+        #pass
 
 
     def _get_response_for_seer_guess(self, message):
@@ -318,7 +490,7 @@ Based on your thoughts, the current situation, and your reflection on the initia
         specific_prompt = """think through your response by answering the following step-by-step:
 1. Based on recent discussions, who seems to be in the most danger?
 2. Have I protected myself recently, or do I need to consider self-protection?
-3. Are there any players who might be the Seer or other key roles that I should prioritize?
+3. Are there any players who might be the Seer or other key roles that I should prioritize? If there is a claimed seer, you should save that. 
 4. How can I vary my protection pattern to avoid being predictable to the werewolves?
 5. How can I contribute to the village discussions with or without revealing my role? Should I reveal my role at this point?"""
 
@@ -328,16 +500,24 @@ Based on your thoughts, the current situation, and your reflection on the initia
         return action
 
     def _get_discussion_message_or_vote_response_for_common_room(self, message):
-        role_prompt = getattr(self, f"{self.role.upper()}_PROMPT", self.VILLAGER_PROMPT)
-        game_situation = self.get_interwoven_history()
-        
-        specific_prompt = """think through your response by answering the following step-by-step:
-1. What important information has been shared in the recent discussions?
-2. Based on the game history, who seems most suspicious or trustworthy?
-3. What evidence or observations can I share to help the village without revealing my role?
-4. How can I guide the discussion in a helpful direction based on what I know?
-5. If it's time to vote, who should I vote for and why, considering all the information available?
-6. How do I respond if accused during the day without revealing my role?"""
+        effective_role = self.role
+        if effective_role == "wolf":
+            effective_role = "villager"
+        role_prompt = getattr(self, f"{effective_role.upper()}_PROMPT", self.VILLAGER_PROMPT)
+        game_situation = self.get_interwoven_history(include_wolf_channel=False)
+
+        specific_prompt = f"""You are a {effective_role} in a game of Werewolf. Your goal is to identify and eliminate the werewolves. Strategies:
+        1. Analyze Behaviors: Pay close attention to inconsistencies in players' statements and actions. 
+        2. Active Participation: Engage in discussions to gather information and express your thoughts.
+        3. Collaborate: Work with other villagers to form logical accusations based on evidence.
+        4. Evidence-Based Accusations: Avoid random accusations; support your claims with specific examples.
+        5. Monitor Voting Patterns: Observe who players vote for to identify suspicious behavior.
+        6. Protect Key Roles: Avoid exposing the Seer and Doctor; support them subtly.
+        7. Defend Logically: If accused, saying i am {effective_role} and argue that the guy who accused me is a werewolf.
+        9. (MOST IMPORTANT) Stay Alert: Be wary of players who are unusually quiet or overly aggressive. Are they saying anything irrelevant or distracting the game? 
+        10. Maintain Consistency: Keep your behavior consistent to avoid raising suspicion."""
+
+
 
         inner_monologue = self._get_inner_monologue(role_prompt, game_situation, specific_prompt)
 
@@ -351,14 +531,52 @@ Based on your thoughts, the current situation, and your reflection on the initia
         game_situation = self.get_interwoven_history(include_wolf_channel=True)
         
         specific_prompt = """think through your response by answering the following step-by-step:
-1. Based on the game history, who are the most dangerous villagers to our werewolf team?
-2. Who might be the Seer or Doctor based on their behavior and comments?
-3. Which potential target would be least likely to raise suspicion if eliminated?
-4. How can we coordinate our actions with other werewolves to maximize our chances of success?
-5. Arrive at a consensus for the target and suggest it to the group. Always make suggestions to eliminate at least one person.
-6. How can we defend ourselves if accused during the day without revealing our roles?"""
+1. If there is someone claimed himself to be seer and doctor, but not your wolf mate, vote him to kill
+2. Who might be the Seer or Doctor based on their behavior and comments? Like are they correctly accused me or the other wolf
+3. Which potential target would be least likely to raise suspicion if eliminated? Like those who do not provide useful information, like claiming himself a villager
+4. Arrive at a consensus for the target and suggest it to the group. Always make suggestions to eliminate at least one person.
+5. How can we defend ourselves if accused during the day without revealing our roles?"""
 
         inner_monologue = self._get_inner_monologue(self.WOLF_PROMPT, game_situation, specific_prompt)
 
         action = self._get_final_action(self.WOLF_PROMPT, game_situation, inner_monologue, "suggestion for target")        
         return action
+
+
+# # Testing the agent: Make sure to comment out this code when you want to actually run the agent in some games. 
+
+# # Since we are not using the runner, we need to initialize the agent manually using an internal function:
+# from dotenv import load_dotenv
+# load_dotenv()
+# agent = CoTAgent()
+# agent._sentient_llm_config = {
+#     "config_list": [{
+#             "llm_model_name": os.getenv("SENTIENT_DEFAULT_LLM_MODEL_NAME"), # add model name here, should be: Llama31-70B-Instruct
+#             "api_key": os.getenv("MY_UNIQUE_API_KEY"), # add your api key here
+#             "llm_base_url": "https://hp3hebj84f.us-west-2.awsapprunner.com"
+#         }]  
+# }
+# agent.__initialize__("Fred", "A werewolf player")
+# print(agent._sentient_llm_config)
+# agent.role = "wolf"
+
+
+# # # Simulate receiving and responding to a message
+# import asyncio
+
+# async def main():
+#     message = ActivityMessage(
+#         content_type=MimeType.TEXT_PLAIN,
+#         header=ActivityMessageHeader(
+#             message_id="456",
+#             sender="moderator",
+#             channel=GAME_CHANNEL,
+#             channel_type=MessageChannelType.GROUP
+#         ),
+#         content=TextContent(text="Tell me about yourself")
+#     )
+
+#     response = await agent.async_respond(message)
+#     print(f"Agent response: {response.response.text}")
+
+# asyncio.run(main())
