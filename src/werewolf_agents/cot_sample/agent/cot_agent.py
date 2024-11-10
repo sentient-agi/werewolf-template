@@ -254,10 +254,12 @@ class CoTAgent(IReactiveAgent):
             user_messages = self.direct_messages.get(message.header.sender, [])
             user_messages.append(message.content.text)
             self.direct_messages[message.header.sender] = user_messages
-            self.game_history.append(f"[From - {message.header.sender}| To - {self._name} (me)| Direct Message]: {message.content.text}")
             if not len(user_messages) > 1 and message.header.sender == self.MODERATOR_NAME:
                 self.role = self.find_my_role(message)
                 logger.info(f"Role found for user {self._name}: {self.role}")
+            else:
+                self.game_history.append(f"[From - {message.header.sender}| To - {self._name} (me)| Direct Message]: {message.content.text}")
+
         else:
             group_messages = self.group_channel_messages.get(message.header.channel, [])
             group_messages.append((message.header.sender, message.content.text))
