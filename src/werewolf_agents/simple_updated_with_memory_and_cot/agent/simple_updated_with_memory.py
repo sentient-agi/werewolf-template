@@ -155,6 +155,8 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
 
         assistant_message = f"{response.choices[0].message.content}"
 
+        response = self.cot_response(assistant_message, self.message_history)
+
         self.message_history.pop(-3)
 
         self.message_history.append({
@@ -164,6 +166,33 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
         logger.info(f"Assistant response added to history: {assistant_message}")
 
         return ActivityResponse(response.choices[0].message.content)
+
+    def cot_response(self, assistant_message):
+        local_message_history = self.message_history.copy()
+        local_message_history.append({
+            "role": "system",
+            "content": f"""
+            This is your response to this situation: 
+{assistant_message}
+
+Please verify the following:
+- If asked to vote for someone by moderator, did you vote a specific name?
+- Does my action align with my role and am I revealing too much about myself in a public channel?
+- Is my action going against what my objective is in the game?
+- How can I improve my action to better help the agents on my team and help me survive?
+
+Respond with a new message if you want to update your initial response. Respond with 'continue' if the initial response is good enough.
+"""
+        })
+        response = self.completion_wrapper(
+            model=self.llm_config["llm_model_name"],
+            messages=local_message_history,
+        )
+        cot_message = f"{response.choices[0].message.content}"
+        if 'continue' in cot_message.lower():
+            return assistant_message
+        else:
+            return cot_message
 
     @retry(stop_max_attempt_number=3, wait_fixed=4000)
     def completion_wrapper(self, model, messages):
@@ -229,42 +258,42 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
         return role
 
 
-# Since we are not using the runner, we need to initialize the agent manually using an internal function:
-agent = SimpleUpdatedMemoryAgent()
-agent._sentient_llm_config = {
-    "config_list": [{
-        "llm_model_name": "accounts/fireworks/models/llama-v3p1-70b-instruct",
-        "api_key":  "fw_3ZNceYCn3DLzrknzzjVzvDNe",
-        "llm_base_url": "https://api.fireworks.ai/inference/v1"
-    }]
-}
-agent.__initialize__("Fred", "A werewolf player")
-
-
-async def main():
-    message = ActivityMessage(
-        content_type=MimeType.TEXT_PLAIN,
-        header=ActivityMessageHeader(
-            message_id="456",
-            sender=MODERATOR_NAME,
-            channel="direct",
-            channel_type=MessageChannelType.DIRECT
-        ),
-        content=TextContent(text="Im assigning you as a werewolf. Players: Frodo, Samwise, Meriadoc, Peregrin, Bilbo, Hamfast, Fredegar, Lotho.")
-    )
-    await agent.async_notify(message)
-
-    message = ActivityMessage(
-        content_type=MimeType.TEXT_PLAIN,
-        header=ActivityMessageHeader(
-            message_id="458",
-            sender="Moderator",
-            channel="Play arena",
-            channel_type=MessageChannelType.GROUP
-        ),
-        content=TextContent(text="Discussion: \n Hi, who do you think is or is not a wolf in the group and why?")
-    )
-    response = await agent.async_respond(message)
-    print(f"Agent response: {response.response.text}")
-
-asyncio.run(main())
+# # Since we are not using the runner, we need to initialize the agent manually using an internal function:
+# agent = SimpleUpdatedMemoryAgent()
+# agent._sentient_llm_config = {
+#     "config_list": [{
+#         "llm_model_name": "accounts/fireworks/models/llama-v3p1-70b-instruct",
+#         "api_key": "fw_3ZNceYCn3DLzrknzzjVzvDNe",
+#         "llm_base_url": "https://api.fireworks.ai/inference/v1"
+#     }]
+# }
+# agent.__initialize__("Fred", "A werewolf player")
+#
+#
+# async def main():
+#     message = ActivityMessage(
+#         content_type=MimeType.TEXT_PLAIN,
+#         header=ActivityMessageHeader(
+#             message_id="456",
+#             sender=MODERATOR_NAME,
+#             channel="direct",
+#             channel_type=MessageChannelType.DIRECT
+#         ),
+#         content=TextContent(text="Im assigning you as a werewolf. Players: Frodo, Samwise, Meriadoc, Peregrin, Bilbo, Hamfast, Fredegar, Lotho.")
+#     )
+#     await agent.async_notify(message)
+#
+#     message = ActivityMessage(
+#         content_type=MimeType.TEXT_PLAIN,
+#         header=ActivityMessageHeader(
+#             message_id="458",
+#             sender="Moderator",
+#             channel="Play arena",
+#             channel_type=MessageChannelType.GROUP
+#         ),
+#         content=TextContent(text="Discussion: \n Hi, who do you think is or is not a wolf in the group and why?")
+#     )
+#     response = await agent.async_respond(message)
+#     print(f"Agent response: {response.response.text}")
+#
+# asyncio.run(main())

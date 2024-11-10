@@ -59,6 +59,12 @@ AGENT_CONFIGS = {
         "config_path": "./src/werewolf_agents/simple_updated_with_memory/config.yaml",
         "agent_class": "SimpleUpdatedMemoryAgent"
     },
+    "simple_updated_with_memory_and_cot": {
+        "wheel_path": "./src/werewolf_agents/simple_updated_with_memory_and_cot/dist/simplewolf-0.0.1-py3-none-any.whl",
+        "module_path": "agent/simple_updated_with_memory.py",
+        "config_path": "./src/werewolf_agents/simple_updated_with_memory_and_cot/config.yaml",
+        "agent_class": "SimpleUpdatedMemoryAgent"
+    },
 }
 
 def create_game_config(

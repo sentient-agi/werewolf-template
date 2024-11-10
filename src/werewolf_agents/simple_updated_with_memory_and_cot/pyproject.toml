@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "simplewolf"
+version = "0.0.1"
+description = "A description of your project"
+authors = ["bond <your@email.com>"]  # Add your name and email here
+packages = [{include = "agent"}]  # Add the name of your agent directory here
+
+
+[tool.poetry.dependencies]
+autogen = "0.3.1"
+python = "^3.12"
+tenacity = "^9.0.0"
+openai = "^1.47.1"
+retrying = "^1.3.4"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
