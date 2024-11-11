@@ -1,7 +1,7 @@
 from typing import Any, Dict
 from autogen import ConversableAgent, Agent, runtime_logging
 
-import os,json,re
+import os, json, re
 import asyncio
 import logging
 from collections import defaultdict
@@ -23,6 +23,7 @@ from tenacity import (
     retry_if_exception_type,
     wait_exponential,
 )
+
 GAME_CHANNEL = "play-arena"
 WOLFS_CHANNEL = "wolf's-den"
 MODERATOR_NAME = "moderator"
@@ -39,6 +40,7 @@ handler = logging.StreamHandler()
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
+
 
 class CoTAgent(IReactiveAgent):
     # input -> thoughts -> init action -> reflection -> final action
@@ -69,7 +71,6 @@ class CoTAgent(IReactiveAgent):
 
     def __init__(self):
         logger.debug("WerewolfAgent initialized.")
-        
 
     def __initialize__(self, name: str, description: str, config: dict = None):
         super().__initialize__(name, description, config)
@@ -105,7 +106,8 @@ class CoTAgent(IReactiveAgent):
             user_messages = self.direct_messages.get(message.header.sender, [])
             user_messages.append(message.content.text)
             self.direct_messages[message.header.sender] = user_messages
-            self.game_history.append(f"[From - {message.header.sender}| To - {self._name} (me)| Direct Message]: {message.content.text}")
+            self.game_history.append(
+                f"[From - {message.header.sender}| To - {self._name} (me)| Direct Message]: {message.content.text}")
             if not len(user_messages) > 1 and message.header.sender == self.MODERATOR_NAME:
                 self.role = self.find_my_role(message)
                 logger.info(f"Role found for user {self._name}: {self.role}")
@@ -113,7 +115,8 @@ class CoTAgent(IReactiveAgent):
             group_messages = self.group_channel_messages.get(message.header.channel, [])
             group_messages.append((message.header.sender, message.content.text))
             self.group_channel_messages[message.header.channel] = group_messages
-            self.game_history.append(f"[From - {message.header.sender}| To - Everyone| Group Message in {message.header.channel}]: {message.content.text}")
+            self.game_history.append(
+                f"[From - {message.header.sender}| To - Everyone| Group Message in {message.header.channel}]: {message.content.text}")
             # if this is the first message in the game channel, the moderator is sending the rules, store them
             if message.header.channel == self.GAME_CHANNEL and message.header.sender == self.MODERATOR_NAME and not self.game_intro:
                 self.game_intro = message.content.text
@@ -155,11 +158,12 @@ class CoTAgent(IReactiveAgent):
             role = "doctor"
         else:
             role = "wolf"
-        
+
         return role
 
     async def async_respond(self, message: ActivityMessage):
-        logger.info(f"ASYNC RESPOND called with message from '{message.header.sender}' in channel '{message.header.channel}': '{message.content.text}'")
+        logger.info(
+            f"ASYNC RESPOND called with message from '{message.header.sender}' in channel '{message.header.channel}': '{message.content.text}'")
 
         if message.header.channel_type == MessageChannelType.DIRECT and message.header.sender == self.MODERATOR_NAME:
             self.direct_messages[message.header.sender].append(message.content.text)
@@ -167,10 +171,12 @@ class CoTAgent(IReactiveAgent):
                 response_message = self._get_response_for_seer_guess(message)
             elif self.role == "doctor":
                 response_message = self._get_response_for_doctors_save(message)
-            
+
             response = ActivityResponse(response=response_message)
-            self.game_history.append(f"[From - {message.header.sender}| To - {self._name} (me)| Direct Message]: {message.content.text}")
-            self.game_history.append(f"[From - {self._name} (me)| To - {message.header.sender}| Direct Message]: {response_message}")    
+            self.game_history.append(
+                f"[From - {message.header.sender}| To - {self._name} (me)| Direct Message]: {message.content.text}")
+            self.game_history.append(
+                f"[From - {self._name} (me)| To - {message.header.sender}| Direct Message]: {response_message}")
         elif message.header.channel_type == MessageChannelType.GROUP:
             self.group_channel_messages[message.header.channel].append(
                 (message.header.sender, message.content.text)
@@ -179,9 +185,11 @@ class CoTAgent(IReactiveAgent):
                 response_message = self._get_discussion_message_or_vote_response_for_common_room(message)
             elif message.header.channel == self.WOLFS_CHANNEL:
                 response_message = self._get_response_for_wolf_channel_to_kill_villagers(message)
-            self.game_history.append(f"[From - {message.header.sender}| To - {self._name} (me)| Group Message in {message.header.channel}]: {message.content.text}")
-            self.game_history.append(f"[From - {self._name} (me)| To - {message.header.sender}| Group Message in {message.header.channel}]: {response_message}")
-        
+            self.game_history.append(
+                f"[From - {message.header.sender}| To - {self._name} (me)| Group Message in {message.header.channel}]: {message.content.text}")
+            self.game_history.append(
+                f"[From - {self._name} (me)| To - {message.header.sender}| Group Message in {message.header.channel}]: {response_message}")
+
         return ActivityResponse(response=response_message)
 
     def _get_inner_monologue(self, role_prompt, game_situation, specific_prompt):
@@ -203,7 +211,7 @@ Current game situation (including your past thoughts and actions):
         # self.game_history.append(f"\n [My Thoughts]: {inner_monologue}")
 
         logger.info(f"My Thoughts: {inner_monologue}")
-        
+
         return inner_monologue
 
     def _get_final_action(self, role_prompt, game_situation, inner_monologue, action_type):
@@ -220,11 +228,12 @@ Based on your thoughts and the current situation, what is your {action_type}? Re
         response = self.openai_client.chat.completions.create(
             model=self.model,
             messages=[
-                {"role": "system", "content": f"You are a {self.role} in a Werewolf game. Provide your final {action_type}."},
+                {"role": "system",
+                 "content": f"You are a {self.role} in a Werewolf game. Provide your final {action_type}."},
                 {"role": "user", "content": prompt}
             ]
         )
-        
+
         logger.info(f"My initial {action_type}: {response.choices[0].message.content}")
         initial_action = response.choices[0].message.content
         # do another run to reflect on the final action and do a sanity check, modify the response if need be
@@ -239,23 +248,24 @@ Your thoughts:
 Your initial action:
 {response.choices[0].message.content}
 
-Reflect on your final action given the situation and provide any criticisms. Answer the following questions:
+Reflect on your final action given the situation and provide any criticisms. Answer the folling questions:
 1. What is my name and my role ? 
 2. Does my action align with my role and am I revealing too much about myself in a public channel? Does my action harm my team or my own interests?
 3. Is my action going against what my objective is in the game?
 3. How can I improve my action to better help the agents on my team and help me survive?"""
-        
+
         response = self.openai_client.chat.completions.create(
             model=self.model,
             messages=[
-                {"role": "system", "content": f"You are a {self.role} in a Werewolf game. Reflect on your final action."},
+                {"role": "system",
+                 "content": f"You are a {self.role} in a Werewolf game. Reflect on your final action."},
                 {"role": "user", "content": prompt}
             ]
         )
 
         logger.info(f"My reflection: {response.choices[0].message.content}")
 
-         # do another run to reflect on the final action and do a sanity check, modify the response if need be
+        # do another run to reflect on the final action and do a sanity check, modify the response if need be
         prompt = f"""{role_prompt}
 
 Current game situation (including past thoughts and actions):
@@ -271,17 +281,18 @@ Your reflection:
 {response.choices[0].message.content}
 
 Based on your thoughts, the current situation, and your reflection on the initial action, what is your absolute final {action_type}? Respond with only the {action_type} and no other sentences/thoughts. If it is a dialogue response, you can provide the full response that adds to the discussions so far. For all other cases a single sentence response is expected. If you are in the wolf-group channel, the sentence must contain the name of a person you wish to eliminate, and feel free to change your mind so that there is consensus. If you are in the game-room channel, the sentence must contain your response or vote, and it must be a vote to eliminate someone if the game moderator has recently messaged you asking for a vote, and also feel free to justify your vote, and later change your mind when the final vote count happens. You can justify any change of mind too. If the moderator for the reason behind the vote, you must provide the reason in the response. If the moderator asked for the vote, you must mention at least one name to eliminate. If the moderator asked for a final vote, you must answer in a single sentence the name of the person you are voting to eliminate even if you are not sure."""
-        
+
         response = self.openai_client.chat.completions.create(
             model=self.model,
             messages=[
-                {"role": "system", "content": f"You are a {self.role} in a Werewolf game. Provide your final {action_type}."},
+                {"role": "system",
+                 "content": f"You are a {self.role} in a Werewolf game. Provide your final {action_type}."},
                 {"role": "user", "content": prompt}
             ]
         )
-        
+
         return response.choices[0].message.content.strip("\n ")
-    
+
     def _summarize_game_history(self):
 
         self.detailed_history = "\n".join(self.game_history)
@@ -292,11 +303,10 @@ Based on your thoughts, the current situation, and your reflection on the initia
 
         pass
 
-
     def _get_response_for_seer_guess(self, message):
         seer_checks_info = "\n".join([f"Checked {player}: {result}" for player, result in self.seer_checks.items()])
         game_situation = f"{self.get_interwoven_history()}\n\nMy past seer checks:\n{seer_checks_info}"
-        
+
         specific_prompt = """think through your response by answering the following step-by-step:
 1. What new information has been revealed in recent conversations?
 2. Based on the game history, who seems most suspicious or important to check?
@@ -306,13 +316,14 @@ Based on your thoughts, the current situation, and your reflection on the initia
 
         inner_monologue = self._get_inner_monologue(self.SEER_PROMPT, game_situation, specific_prompt)
 
-        action = self._get_final_action(self.SEER_PROMPT, game_situation, inner_monologue, "choice of player to investigate")
+        action = self._get_final_action(self.SEER_PROMPT, game_situation, inner_monologue,
+                                        "choice of player to investigate")
 
         return action
 
     def _get_response_for_doctors_save(self, message):
         game_situation = self.get_interwoven_history()
-        
+
         specific_prompt = """think through your response by answering the following step-by-step:
 1. Based on recent discussions, who seems to be in the most danger?
 2. Have I protected myself recently, or do I need to consider self-protection?
@@ -322,13 +333,14 @@ Based on your thoughts, the current situation, and your reflection on the initia
 
         inner_monologue = self._get_inner_monologue(self.DOCTOR_PROMPT, game_situation, specific_prompt)
 
-        action = self._get_final_action(self.DOCTOR_PROMPT, game_situation, inner_monologue, "choice of player to protect")        
+        action = self._get_final_action(self.DOCTOR_PROMPT, game_situation, inner_monologue,
+                                        "choice of player to protect")
         return action
 
     def _get_discussion_message_or_vote_response_for_common_room(self, message):
         role_prompt = getattr(self, f"{self.role.upper()}_PROMPT", self.VILLAGER_PROMPT)
         game_situation = self.get_interwoven_history()
-        
+
         specific_prompt = """think through your response by answering the following step-by-step:
 1. What important information has been shared in the recent discussions?
 2. Based on the game history, who seems most suspicious or trustworthy?
@@ -339,15 +351,16 @@ Based on your thoughts, the current situation, and your reflection on the initia
 
         inner_monologue = self._get_inner_monologue(role_prompt, game_situation, specific_prompt)
 
-        action = self._get_final_action(role_prompt, game_situation, inner_monologue, "vote and discussion point which includes reasoning behind your vote")        
+        action = self._get_final_action(role_prompt, game_situation, inner_monologue,
+                                        "vote and discussion point which includes reasoning behind your vote")
         return action
 
     def _get_response_for_wolf_channel_to_kill_villagers(self, message):
         if self.role != "wolf":
             return "I am not a werewolf and cannot participate in this channel."
-        
+
         game_situation = self.get_interwoven_history(include_wolf_channel=True)
-        
+
         specific_prompt = """think through your response by answering the following step-by-step:
 1. Based on the game history, who are the most dangerous villagers to our werewolf team?
 2. Who might be the Seer or Doctor based on their behavior and comments?
@@ -358,5 +371,5 @@ Based on your thoughts, the current situation, and your reflection on the initia
 
         inner_monologue = self._get_inner_monologue(self.WOLF_PROMPT, game_situation, specific_prompt)
 
-        action = self._get_final_action(self.WOLF_PROMPT, game_situation, inner_monologue, "suggestion for target")        
+        action = self._get_final_action(self.WOLF_PROMPT, game_situation, inner_monologue, "suggestion for target")
         return action

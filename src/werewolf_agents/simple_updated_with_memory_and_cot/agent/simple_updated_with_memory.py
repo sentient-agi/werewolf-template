@@ -274,17 +274,17 @@ Note that your response will go to the public channel, just respond with updated
 
         return role
 
-
-# Since we are not using the runner, we need to initialize the agent manually using an internal function:
-agent = SimpleUpdatedMemoryAgent()
-agent._sentient_llm_config = {
-    "config_list": [{
-        "llm_model_name": "accounts/fireworks/models/llama-v3p1-70b-instruct",
-        "api_key": "fw_3ZNceYCn3DLzrknzzjVzvDNe",
-        "llm_base_url": "https://api.fireworks.ai/inference/v1"
-    }]
-}
-agent.__initialize__("Fred", "A werewolf player")
+#
+# # Since we are not using the runner, we need to initialize the agent manually using an internal function:
+# agent = SimpleUpdatedMemoryAgent()
+# agent._sentient_llm_config = {
+#     "config_list": [{
+#         "llm_model_name": "accounts/fireworks/models/llama-v3p1-70b-instruct",
+#         "api_key": "fw_3ZNceYCn3DLzrknzzjVzvDNe",
+#         "llm_base_url": "https://api.fireworks.ai/inference/v1"
+#     }]
+# }
+# agent.__initialize__("Fred", "A werewolf player")
 
 # async def main():
 #     message = ActivityMessage(

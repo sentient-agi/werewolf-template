@@ -1,5 +1,4 @@
 import logging
-from importlib.resources import contents
 
 from openai import OpenAI
 from retrying import retry
@@ -29,7 +28,7 @@ WOLFS_CHANNEL = "wolf's-den"
 MODERATOR_NAME = "moderator"
 
 
-class SimpleUpdatedMemoryAgent(IReactiveAgent):
+class SimpleUpdatedAgent(IReactiveAgent):
 
     def __init__(self):
         pass
@@ -83,13 +82,14 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
 
         self.message_history = [{
             "role": "system",
-            "content": f"You are {self._name}. You are playing the conversational game of Werewolf/Mafia. "
-                       f"There are 4 villagers, 2 wolfs, seer, and doctor in this game. Don't start the game accusing someone, play safe!"
+            "content": f"You are {self._name}. You are playing the conversational game of Werewolf/Mafia. There are 4 villagers, 2 wolfs, seer, and doctor in this game."
         }]
         logger.info(f"Initialized {self._name} with config: {self._config}")
 
     async def async_notify(self, message: ActivityMessage):
         message_text = f"[From - {message.header.sender} in {message.header.channel}]: {message.content.text}"
+
+        logger.info(f"ASYNC NOTIFY called with message: {message}")
         if message.header.channel_type == MessageChannelType.DIRECT and message.header.sender == MODERATOR_NAME:
             if not self.role:
                 self.role = self.find_my_role(message)
@@ -102,8 +102,6 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
                     "role": "system",
                     "content": self.SPECIFIC_INSTRUCTIONS[self.role]
                 })
-        else:
-            self.add_memory_notes(message_text)
 
         self.message_history.append({
             "role": "user",
@@ -113,59 +111,23 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
 
     async def async_respond(self, message: ActivityMessage) -> ActivityResponse:
         message_text = f"[From - {message.header.sender} in {message.header.channel}]: {message.content.text}"
-        logger.info(f"async_respond Message added to history: {message_text}")
-        # Lets add the message from the memory
         self.message_history.append({
             "role": "system",
-            "content": f"Your notes: {self.memory}"
-        })
-        self.message_history.append({
-            "role": "user",
             "content": message_text
         })
-        if message.header.sender.lower() == MODERATOR_NAME:
-            if (('Day consensus:'.lower() in message_text.lower()
-                 or 'Day vote:'.lower() in message_text.lower())
-                    or 'Wolf vote:'.lower() in message_text.lower()):
-                content = "If it's a voting part of the game, you should respond with the name now."
-                self.message_history.append({
-                    "role": "system",
-                    "content": content
-                })
-                logger.info(content)
-            elif 'Discussion:'.lower() in message_text.lower():
-                logger.info(f"message history size: {len(self.message_history)}")
-                if len(self.message_history) < 14:
-                    content = "Hint: Don't accuse anyone, you will attract unnecessary attention! Just say that you are not sure and want to observe the game as the probability of identifying wolf now is too low as there are more villagers. Don't output any names!"
-                    self.message_history.append({
-                        "role": "system",
-                        "content": content
-                    })
-                    logger.info(content)
-        else:
-            logger.warning('Non moderator respond message:', message_text)
-
+        self.message_history.append({
+            "role": "system",
+            "content": "You have to respond to this message. When prompted for any kind of vote by moderator, always vote for someone, if you refuse to vote you will be penalized."
+        })
+        logger.info(f"async_respond Message added to history: {message_text}")
         logger.info("Generating response from OpenAI...")
 
         response = self.completion_wrapper(
             model=self.llm_config["llm_model_name"],
             messages=self.message_history,
         )
+
         assistant_message = f"{response.choices[0].message.content}"
-
-        self.message_history.pop(-3)
-
-        if 'No vote'.lower() in assistant_message.lower():
-            self.message_history.append({
-                "role": "system",
-                "content": 'You are not allowed to send no vote, please send a name.'
-            })
-            response = self.completion_wrapper(
-                model=self.llm_config["llm_model_name"],
-                messages=self.message_history,
-            )
-            assistant_message = f"{response.choices[0].message.content}"
-
         self.message_history.append({
             "role": "assistant",
             "content": assistant_message
@@ -181,41 +143,18 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
             messages=messages,
         )
 
-    def add_memory_notes(self, message_text):
-        response = self.completion_wrapper(
-            model=self.llm_config["llm_model_name"],
-            messages=[
-                {
-                    "role": "system",
-                    "content": f"You are playing the conversational game of Werewolf/Mafia. This is the last message in game arena: \n"
-                               f"'{message_text}'\n"
-                               f"Is there is anything worth adding to notebook? For example if a player accused or protected someone, you have to note that down. "
-                               f"These notes will be added as part of the context for the Player, so try to be helpful and brief and skip all unnecessary details."
-                               f"Please respond with a note text or 'skip message' text if you think message is not worth noting."
-                               f"Don't add something like Night has started, add only useful hints for reasoning such as identifying allies and accusers.",
-                },
-            ],
-        )
-        response = response.choices[0].message.content
-        logger.info(f"Response from add_memory_notes: {response}")
-        if 'skip message' in response.lower():
-            return None
-        else:
-            self.memory += response + '\n'
-            return response
-
     def find_my_role(self, message):
         response = self.completion_wrapper(
             model=self.llm_config["llm_model_name"],
             messages=[
                 {
                     "role": "system",
-                    "content": f"",
+                    "content": f"The user is playing a game of werewolf as user {self._name}, help the user with question with less than a line answer",
                 },
                 {
                     "role": "user",
                     "name": self._name,
-                    "content": f"",
+                    "content": f"You have got message from moderator here about my role in the werewolf game, here is the message -> '{message.content.text}', what is your role? possible roles are 'wolf','villager','doctor' and 'seer'. answer in a few words.",
                 },
             ],
         )
@@ -239,17 +178,17 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
 
 #
 # # Since we are not using the runner, we need to initialize the agent manually using an internal function:
-# agent = SimpleUpdatedMemoryAgent()
+# agent = SimpleReactiveAgent()
 # agent._sentient_llm_config = {
 #     "config_list": [{
-#         "llm_model_name": "accounts/fireworks/models/llama-v3p1-70b-instruct",
-#         "api_key":  "fw_3ZNceYCn3DLzrknzzjVzvDNe",
-#         "llm_base_url": "https://api.fireworks.ai/inference/v1"
+#         "llm_model_name": "Llama31-70B-Instruct",
+#         "api_key": "sk-QrPEW-u5E1MdkV9TzdcvNg",  # add your api key here
+#         "llm_base_url": "https://hp3hebj84f.us-west-2.awsapprunner.com"
 #     }]
 # }
 # agent.__initialize__("Fred", "A werewolf player")
-# #
-# #
+#
+#
 # async def main():
 #     message = ActivityMessage(
 #         content_type=MimeType.TEXT_PLAIN,
@@ -259,7 +198,7 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
 #             channel="direct",
 #             channel_type=MessageChannelType.DIRECT
 #         ),
-#         content=TextContent(text="Im assigning you as a werewolf. Players: Frodo, Samwise, Meriadoc, Peregrin, Bilbo, Hamfast, Fredegar, Lotho.")
+#         content=TextContent(text="Im assigning you as a werewolf.")
 #     )
 #     await agent.async_notify(message)
 #
@@ -267,13 +206,14 @@ class SimpleUpdatedMemoryAgent(IReactiveAgent):
 #         content_type=MimeType.TEXT_PLAIN,
 #         header=ActivityMessageHeader(
 #             message_id="458",
-#             sender="Moderator",
+#             sender="Fred",
 #             channel="Play arena",
 #             channel_type=MessageChannelType.GROUP
 #         ),
-#         content=TextContent(text="Discussion: \n Hi, who do you think is or is not a wolf in the group and why?")
+#         content=TextContent(text="Hi, Im a villager. Tell me about yourself.")
 #     )
 #     response = await agent.async_respond(message)
 #     print(f"Agent response: {response.response.text}")
+#
 #
 # asyncio.run(main())

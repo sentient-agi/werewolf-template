@@ -16,7 +16,11 @@ agent_config = PlayerAgentConfig(
     player_name="James", # select a name for your agent
                 
     #TODO: IMPORTANT!! After building your agent for the first time, you must update this path:
+<<<<<<< HEAD
     agent_wheel_path="/Users/aydar/Documents/GitHub/werewolf-template/src/werewolf_agents/simple_sample/dist/simplewolf-0.0.1-py3-none-any.whl",
+=======
+    agent_wheel_path="dist/simplewolf-0.0.1-py3-none-any.whl", 
+>>>>>>> main
     module_path="agent/super_simple.py",
     agent_class_name="SimpleReactiveAgent",
     agent_config_file_path="config.yaml" 

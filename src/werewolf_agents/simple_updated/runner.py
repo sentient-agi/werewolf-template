@@ -13,22 +13,18 @@ Path("transcripts").mkdir(parents=True, exist_ok=True)
 
 runner = WerewolfCampaignActivityRunner()
 agent_config = PlayerAgentConfig(
-    player_name="Chagent", # select a name for your agent
+    player_name="James", # select a name for your agent
                 
     #TODO: IMPORTANT!! After building your agent for the first time, you must update this path:
-<<<<<<< HEAD
-    agent_wheel_path="dist/chagent-0.1.0-py3-none-any.whl",
-=======
-    agent_wheel_path="dist/chagent-0.1.0-py3-none-any.whl", 
->>>>>>> main
-    module_path="agent/cot_agent.py",
-    agent_class_name="CoTAgent",
+    agent_wheel_path="dist/simplewolf-0.0.1-py3-none-any.whl",
+    module_path="agent/simple_updated.py",
+    agent_class_name="SimpleUpdatedAgent",
     agent_config_file_path="config.yaml" 
 )
 players_sentient_llm_api_keys = [os.getenv("MY_UNIQUE_API_KEY")]
 
 # Run the game and save the results
-game_results = runner.run_locally(
+game_results = runner.run_against_standard_agents(
     agent_config,
     players_sentient_llm_api_keys,
     path_to_final_transcript_dump="transcripts",
@@ -43,4 +39,7 @@ with open(results_file, 'w') as f:
 print(f"Game results saved to: {results_file}")
 
 # Use this URL to watch the game live, please wait till the game gets going, otherwise it will say incorrect credentials
+# Safari not supported, use Chrome. 
 # URL to hosted game messenger client: https://hydrogen.sentient.xyz/#/login
+
+# IF THIS MESSENGER CLIENT IS NOT WORKING, MAKE SURE YOU ARE USING SAFARI, AND WAITING. IF STILL NOT WORKING SEE DOCS.
